@@ -70,16 +70,16 @@
         };
 
         const SUITS = {
-            'Workskin': { dur: 'D4', move: 8, uSlots: 3, mods: 1 },
-            'Rig Suit': { dur: 'D4+1', move: 6, uSlots: 3, mods: 2 },
-            'Hardshell': { dur: 'D6', move: 5, uSlots: 4, mods: 3 },
-            'Void Suit': { dur: 'D6+1', move: 6, uSlots: 3, mods: 2 }
+            'Workskin': { dur: 'D4', move: 8, uSlots: 3, mods: 1, special: 'Lightweight and flexible. Minimal protection.' },
+            'Rig Suit': { dur: 'D4+1', move: 6, uSlots: 3, mods: 2, special: 'Standard issue for contracted crews.' },
+            'Hardshell': { dur: 'D6', move: 5, uSlots: 4, mods: 3, special: 'Heavy, restrictive, and difficult to maneuver.' },
+            'Void Suit': { dur: 'D6+1', move: 6, uSlots: 3, mods: 2, special: '+2 to all Resist rolls (Entry Conditions, Hazards, Redline effects). Ultra-rare and tightly controlled.' }
         };
 
         const WEAPONS_MELEE = {
             'Wrecking Bar': { uSlots: 0, effects: 'Hit up to two adjacent hostiles in melee. +1 to Break/Brace.' },
             'Pulaski Axe': { uSlots: 0, effects: '–2 to defender’s DD. +1 to Break/Brace. Wound causes Suit Breach.' },
-            'Power Shears': { uSlots: -1, effects: '–2″ Movement, –1 to Melee attacks. +1 to user’s DD. +2 to Break/Brace. –4 to defender’s DD.' },
+            'Power Shears': { uSlots: 0, effects: '–2″ Movement, –1 to Melee attacks. +1 to user’s DD. +2 to Break/Brace. –4 to defender’s DD.' },
             'Cutter Torch': { uSlots: 1, effects: '–1 to defender’s DD. +2 to Break/Brace. Grants +1 Utility Slot.' },
             'Shock Baton': { uSlots: 0, effects: 'Blocked hits force a second DD roll. Fail = target is Stunned. Robotic targets suffer –2 to DD.' },
             'Vibro-Knife': { uSlots: 1, effects: 'Wound causes Suit Breach. Grants +1 Utility Slot.' },
@@ -97,21 +97,21 @@
         };
 
         const KNACKS = {
-            'Space Ballet': { effect: 'Ignore zero-G movement penalties.' },
-            'Hatch Rat': { effect: '+1 DD when bypassing sealed doors/hatches.' },
-            'Wire Head': { effect: '+1 DD to Scan/Hack actions.' },
-            'Deep Pocket': { effect: 'Gain +1 Utility Slot capacity.' },
-            'Ship Breaker': { effect: '+1 DD to Break/Brace actions.' },
-            'Quick Stitch': { effect: '+1 DD to Repair/Heal actions.' }
+            'Space Ballet': { effect: 'May reroll any failed Movement-related Dodge/Defend roll made in Zero-G. Second result must be accepted.' },
+            'Hatch Rat': { effect: 'When searching a Point of Interest, double the total of any Salvage Value roll.' },
+            'Wire Head': { effect: 'May forgo Free Move to automatically succeed at a Scan/Hack action instead.' },
+            'Deep Pocket': { effect: 'One Utility Slot may hold two identical single-use items instead of one.' },
+            'Ship Breaker': { effect: 'May forgo Free Move to automatically succeed at a Break/Brace action instead.' },
+            'Quick Stitch': { effect: 'May forgo Free Move to automatically succeed at a Repair/Heal action instead.' }
         };
 
         const RATTLES = {
-            'Spacer\'s Shake': { effect: '-1 DD to all Ranged attacks.' },
-            'Frangible Flinch': { effect: '-1 DD to Resist Stress.' },
-            'Grav-Legs': { effect: '-2" Movement in standard gravity.' },
-            'Scarred Lungs': { effect: '-1 DD vs Toxic hazards.' },
-            'Seal Burns': { effect: '-1 DD vs Vacuum hazards.' },
-            'Nervous Tic': { effect: 'Cannot push Focus vital.' }
+            'Spacer\'s Shake': { effect: 'Suffer –1 to all Scan/Hack and Repair/Heal rolls. Cannot be taken with Wire Head or Quick Stitch.' },
+            'Frangible Flinch': { effect: 'When combat begins, must spend first action or Free Move to move into cover, if available.' },
+            'Grav-Legs': { effect: 'Suffer –1 to all Dodge/Defend rolls made in Zero-G environments.' },
+            'Scarred Lungs': { effect: 'Suffer –1 to Resist rolls made against Toxic Cloud or Nanite Swarm hazards.' },
+            'Seal Burns': { effect: 'Move Rate is reduced by 1″.' },
+            'Nervous Tic': { effect: 'Do not gain a Free Move on the first turn after entering a new MHU.' }
         };
         
         const EVA_MODS = {
@@ -1287,7 +1287,7 @@
                         }
                     }
 
-                    if (wModData.effect.includes('–1 target DD')) {
+                    if (wModData.effect.includes('–1 target DD') && weaponType === 'melee') {
                         ddMod -= 1;
                     }
                     
@@ -2122,41 +2122,41 @@
 
                 if (lvl === 1) {
                     if (rollVal === 1) { text = "All Clear. No Hazards or Hostiles this turn."; }
-                    else if (rollVal === 2) { text = "Arcs and Sparks. Risk Stun when entering or moving."; addHazard('Arcs and Sparks'); }
-                    else if (rollVal === 3) { text = "Power Loss. MHU goes dark. Darkness penalties apply."; addHazard('Power Loss'); }
-                    else if (rollVal === 4) { text = "Ghosts in the Alloy. All Scrapjacks roll Grit -1."; addHazard('Ghosts in the Alloy'); }
-                    else if (rollVal === 5) { text = "Toxic Fumes. One tile affected. LOS reduced."; addHazard('Toxic Fumes'); }
+                    else if (rollVal === 2) { text = "Arcs and Sparks. Electrical discharge. Scrapjacks risk Stun when entering or moving this turn."; addHazard('Arcs and Sparks'); }
+                    else if (rollVal === 3) { text = "Power Loss. MHU goes dark. Darkness penalties apply until end of Hitch Phase."; addHazard('Power Loss'); }
+                    else if (rollVal === 4) { text = "Ghosts in the Alloy. All Scrapjacks roll Grit –1. Fail: lose Grit die next activation."; addHazard('Ghosts in the Alloy'); }
+                    else if (rollVal === 5) { text = "Toxic Fumes. One tile affected. LOS reduced. Resolve as standard Toxic Fumes Hazard."; addHazard('Toxic Fumes'); }
                     else if (rollVal === 6) { text = "Void Rats (Ghost Step). Spawn normally."; spawnedEnemy = 'Void Rats'; pCheck = true; }
                     else if (rollVal === 7) { text = "Small Maintenance Droids (Fast-Mover). Spawn normally."; spawnedEnemy = 'Small Maintenance Droids'; pCheck = true; }
                     else if (rollVal === 8) { text = "Infested Crew (Frenzied). Spawn normally."; spawnedEnemy = 'Infested Crew'; pCheck = true; }
                     else if (rollVal === 9) { text = "Hull Shift. All Scrapjacks roll DD. Fail: suffer 1 Wound."; addHazard('Hull Shift'); }
-                    else if (rollVal === 10) { text = "Pressure Building. No immediate effect. Next Hitch uses Level II table."; }
+                    else if (rollVal === 10) { text = "Pressure Building. No immediate effect. Next Hitch roll uses Level II table."; }
                 } else if (lvl === 2) {
                     if (rollVal === 1) {
                         const subRoll = Math.floor(getSecureRandom() * 6) + 1;
                         if (subRoll <= 3) { text = "Uneasy Silence -> Raiders spawn (Cull Protocol)."; spawnedEnemy = 'Raiders'; pCheck = true; }
                         else { text = "Uneasy Silence -> All Clear."; }
                     }
-                    else if (rollVal === 2) { text = "Arcs and Sparks. Risk Stun this turn."; addHazard('Arcs and Sparks'); }
-                    else if (rollVal === 3) { text = "Radiation Spike. All Scrapjacks roll Focus -1."; addHazard('Radiation Spike'); }
-                    else if (rollVal === 4) { text = "Hull Breach. Roll D4 for quadrant."; addHazard('Hull Breach'); }
+                    else if (rollVal === 2) { text = "Arcs and Sparks. Electrical discharge. Risk Stun this turn."; addHazard('Arcs and Sparks'); }
+                    else if (rollVal === 3) { text = "Radiation Spike. All Scrapjacks roll Focus –1. Fail: lose Focus die next activation."; addHazard('Radiation Spike'); }
+                    else if (rollVal === 4) { text = "Hull Breach. Roll D4 for quadrant. Damage at center (or nearest). Scrapjacks roll Load –1 or move 3″ toward breach."; addHazard('Hull Breach'); }
                     else if (rollVal === 5) { text = "Pirates (Low-Profile). Spawn normally."; spawnedEnemy = 'Pirates'; pCheck = true; }
                     else if (rollVal === 6) { text = "Small Security Droids (Double-Tap). Spawn and activate immediately."; spawnedEnemy = 'Small Security Droids'; pCheck = true; }
                     else if (rollVal === 7) { text = "Nanite Swarm (System Shock). Spawn normally."; spawnedEnemy = 'Nanite Swarm'; pCheck = true; }
-                    else if (rollVal === 8) { text = "Large Maintenance Droids (Heavy Hit). Spawn normally."; spawnedEnemy = 'Large Maintenance Droids'; pCheck = true; }
+                    else if (rollVal === 8) { text = "Large Maintenance Droid (Heavy Hit). Spawn normally."; spawnedEnemy = 'Large Maintenance Droids'; pCheck = true; }
                     else if (rollVal === 9) { text = "Small Xeno Types (First Contact). Spawn normally."; spawnedEnemy = 'Small Xeno Types'; pCheck = true; }
-                    else if (rollVal === 10) { text = "Toxic Fumes. LOS reduced to 6 inches."; addHazard('Toxic Fumes'); }
+                    else if (rollVal === 10) { text = "Toxic Fumes. LOS reduced to 6″. Scrapjacks roll Resist (Grit) or lose 1 Aircharge."; addHazard('Toxic Fumes'); }
                 } else if (lvl === 3) {
-                    if (rollVal === 1) { text = "She's Breaking Up. Resolve Hull Shift and Arcs and Sparks."; addHazard('Hull Shift'); addHazard('Arcs and Sparks'); }
-                    else if (rollVal === 2) { text = "Double Hull Breach. Two quadrants lose pressure."; addHazard('Hull Breach'); addHazard('Double Hull Breach'); }
-                    else if (rollVal === 3) { text = "Total Power Loss. MHU goes dark until end of next activation."; addHazard('Total Power Loss'); }
+                    if (rollVal === 1) { text = "She's Breaking Up. Resolve Hull Shift and Arcs and Sparks simultaneously."; addHazard('Hull Shift'); addHazard('Arcs and Sparks'); }
+                    else if (rollVal === 2) { text = "Double Hull Breach. Two quadrants lose pressure. Resolve as two Hull Breach effects."; addHazard('Hull Breach'); addHazard('Double Hull Breach'); }
+                    else if (rollVal === 3) { text = "Total Power Loss. MHU goes dark until end of the next activation."; addHazard('Total Power Loss'); }
                     else if (rollVal === 4) { text = "Large Security Droids (Plated, Double-Tap). Spawn normally."; spawnedEnemy = 'Large Security Droids'; pCheck = true; }
                     else if (rollVal === 5) { text = "VRG Compliance Team (Low-Profile, Pinning Fire). Spawn normally."; spawnedEnemy = 'VRG Compliance Team'; pCheck = true; }
                     else if (rollVal === 6) { text = "Bio-Asset (Frenzied, Cull Protocol). Spawn normally."; spawnedEnemy = 'Bio-Asset'; pCheck = true; }
-                    else if (rollVal === 7) { text = "C-FRAME Combat Units (Redundant Core, Hardwired). Spawn and activate immediately."; spawnedEnemy = 'C-FRAME Combat Units'; pCheck = true; }
-                    else if (rollVal === 8) { text = "Radiation Spike + Toxic Fumes. Both Hazards apply simultaneously."; addHazard('Radiation Spike'); addHazard('Toxic Fumes'); }
-                    else if (rollVal === 9) { text = "Large Xeno Types (Reach). Spawn normally."; spawnedEnemy = 'Large Xeno Types'; pCheck = true; }
-                    else if (rollVal === 10) { text = "Everything Breaks. Resolving twice..."; }
+                    else if (rollVal === 7) { text = "C-FRAME Combat Units (Redundant Core, Self-Sealing). Spawn and activate immediately."; spawnedEnemy = 'C-FRAME Combat Units'; pCheck = true; }
+                    else if (rollVal === 8) { text = "Radiation Spike + Toxic Fumes. Both Hazards apply simultaneously in the MHU."; addHazard('Radiation Spike'); addHazard('Toxic Fumes'); }
+                    else if (rollVal === 9) { text = "Large Xeno Types (Reach, Frenzied). Spawn normally."; spawnedEnemy = 'Large Xeno Types'; pCheck = true; }
+                    else if (rollVal === 10) { text = "Everything Breaks. Roll twice on this table. Resolve both results."; }
                 }
 
                 if (spawnedEnemy) {
@@ -2200,19 +2200,28 @@
                     roll = Math.min(10, roll + 1);
                     logPrefix = `Hitch (Level ${missionLevel}) [${manualRollStr ? 'Manual Roll' : 'Roll'}: ${roll} (+1 Alarm Penalty applied)]: `;
                     setNextMhuHitchPlus1(false);
-                } else if (nextMhuHitchHullShift) {
-                    logPrefix = `Hitch (Level ${missionLevel}) [Forced Consequence]: `;
-                    setNextMhuHitchHullShift(false);
-                    addLog(logPrefix + "Hull Shift. All Scrapjacks roll DD. Fail: suffer 1 Wound.");
-                    addHazard('Hull Shift');
-                    return;
                 } else {
                     logPrefix = `Hitch (Level ${missionLevel}) [${manualRollStr ? 'Manual Roll' : 'Roll'}: ${roll}]: `;
                 }
 
                 let text = logPrefix;
-                
-                if (roll === 10 && effectiveLevel === 3) {
+
+                if (nextMhuHitchHullShift) {
+                    setNextMhuHitchHullShift(false);
+                    text = `Hitch (Level ${missionLevel}) [Forced Consequence]: Hull Shift. All Scrapjacks roll DD. Fail: suffer 1 Wound.`;
+                    addHazard('Hull Shift');
+                } else if (nextMhuHitchPrime) {
+                    // Re-roll until Hostile result (for L3 this means a roll that spawns a Hostile)
+                    let forcedRoll = roll;
+                    if (!manualRollStr) {
+                        const hostileRolls = [4, 5, 6, 7, 9]; // Level 3 hostile spawns
+                        while (!hostileRolls.includes(forcedRoll)) {
+                            forcedRoll = Math.floor(getSecureRandom() * 10) + 1;
+                        }
+                    }
+                    text = `Hitch (Level ${missionLevel}) [Forced Hostile w/ Prime]: `;
+                    text += processHitchEvent(effectiveLevel, forcedRoll);
+                } else if (roll === 10 && effectiveLevel === 3) {
                     const r1 = Math.floor(getSecureRandom() * 9) + 1;
                     const r2 = Math.floor(getSecureRandom() * 9) + 1;
                     text += `EVERYTHING BREAKS! -> Result 1: ${processHitchEvent(effectiveLevel, r1)} AND Result 2: ${processHitchEvent(effectiveLevel, r2)}`;
@@ -3522,6 +3531,7 @@
                                                                 <span>Durability: {SUITS[char.suit].dur}</span>
                                                                 <span>Move: {SUITS[char.suit].move}"</span>
                                                             </p>
+                                                            {SUITS[char.suit].special && <p className="text-[9px] text-indigo-300 mt-1 italic leading-tight">{SUITS[char.suit].special}</p>}
                                                         </div>
                                                     </div>
 
@@ -4581,6 +4591,7 @@
                                                             <div style={{marginBottom:'4px'}}><strong>TYPE:</strong> {char.suit}</div>
                                                             <div style={{marginBottom:'4px'}}><strong>MOVEMENT:</strong> {SUITS[char.suit]?.move}"</div>
                                                             <div style={{marginBottom:'4px'}}><strong>DURABILITY:</strong> {SUITS[char.suit]?.dur}</div>
+                                                            {SUITS[char.suit]?.special && <div className="rules-text"><strong>SPECIAL:</strong> {SUITS[char.suit].special}</div>}
                                                             
                                                             {char.evaMods.length > 0 && (
                                                                 <div style={{marginTop:'6px', borderTop:'1px solid #eee', paddingTop:'4px'}}>
