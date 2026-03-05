@@ -399,21 +399,31 @@
             { version: "1.45.0", date: "2026-03-03", notes: ["Separated Interactive POIs from MHU Objectives in the tracking UI. POIs now generate into their own dedicated block and will no longer overwrite the Current MHU Objective.", "Updated resolution prompts and logging terminology to distinguish between 'Completing an Objective' and 'Resolving a POI'."] }
         ];
 
+        // Cryptographically secure random number generator between 0 (inclusive) and 1 (exclusive)
+        const getSecureRandom = () => {
+            if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+                const array = new Uint32Array(1);
+                crypto.getRandomValues(array);
+                return array[0] / (0xffffffff + 1);
+            }
+            return Math.random(); // Fallback
+        };
+
         // Safely generate IDs even if crypto is unavailable
         const generateId = () => {
             if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
-            return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+            return getSecureRandom().toString(36).substring(2, 15) + getSecureRandom().toString(36).substring(2, 15);
         };
 
         const getRandomName = () => {
-            const first = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)];
-            const last = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)];
+            const first = FIRST_NAMES[Math.floor(getSecureRandom() * FIRST_NAMES.length)];
+            const last = LAST_NAMES[Math.floor(getSecureRandom() * LAST_NAMES.length)];
             return `${first} ${last}`;
         };
 
         const getRandomCrewName = () => {
-            const adj = CREW_ADJECTIVES[Math.floor(Math.random() * CREW_ADJECTIVES.length)];
-            const noun = CREW_NOUNS[Math.floor(Math.random() * CREW_NOUNS.length)];
+            const adj = CREW_ADJECTIVES[Math.floor(getSecureRandom() * CREW_ADJECTIVES.length)];
+            const noun = CREW_NOUNS[Math.floor(getSecureRandom() * CREW_NOUNS.length)];
             return `The ${adj} ${noun}`;
         };
         
@@ -426,7 +436,7 @@
         const rollDice = (count, sides) => {
             let total = 0;
             for(let i = 0; i < count; i++) {
-                total += Math.floor(Math.random() * sides) + 1;
+                total += Math.floor(getSecureRandom() * sides) + 1;
             }
             return total;
         };
@@ -434,18 +444,18 @@
         const getRandomItem = (type) => {
             if (type === 'uItem') {
                 const keys = Object.keys(U_ITEMS).filter(k => k !== 'Empty');
-                return keys[Math.floor(Math.random() * keys.length)];
+                return keys[Math.floor(getSecureRandom() * keys.length)];
             } else if (type === 'evaMod') {
                 const keys = Object.keys(EVA_MODS);
-                return keys[Math.floor(Math.random() * keys.length)];
+                return keys[Math.floor(getSecureRandom() * keys.length)];
             } else if (type === 'wepMod') {
                 const keys = Object.keys(WEAPON_MODS).filter(k => k !== 'None');
-                return keys[Math.floor(Math.random() * keys.length)];
+                return keys[Math.floor(getSecureRandom() * keys.length)];
             } else if (type === 'mod') {
                 const wepMods = Object.keys(WEAPON_MODS).filter(k => k !== 'None');
                 const evaMods = Object.keys(EVA_MODS);
                 const allMods = [...wepMods, ...evaMods];
-                return allMods[Math.floor(Math.random() * allMods.length)];
+                return allMods[Math.floor(getSecureRandom() * allMods.length)];
             }
             return 'Scrap Metal';
         };
@@ -575,7 +585,7 @@
             const [tableRollPrompt, setTableRollPrompt] = useState(null);
             const [grenadePrompt, setGrenadePrompt] = useState(null);
             
-            const [combatForm, setCombatForm] = useState({ vital: 'load', weaponType: 'ranged', targetId: '', manualAtk: '', manualDef: '', isAiming: false, isAssisted: false });
+            const [combatForm, setCombatForm] = useState({ vital: 'load', weaponType: 'ranged', targetId: '', manualAtk: '', manualDef: '', isAiming: false, isAssisted: false, useOvercharge: false, isStationary: false });
             const [qpForm, setQpForm] = useState({ actorId: '', die: 'load' });
             const [grenadeForm, setGrenadeForm] = useState({ vital: 'focus', targetId: 'ground', isVisible: true, manualRoll: '' });
             
@@ -1005,7 +1015,7 @@
                 if (crew.length === 0) return;
                 const aliveCrew = crew.filter(c => c.status === 'Active' && c.wounds < 4);
                 const targetPool = aliveCrew.length > 0 ? aliveCrew : crew;
-                const randomChar = targetPool[Math.floor(Math.random() * targetPool.length)];
+                const randomChar = targetPool[Math.floor(getSecureRandom() * targetPool.length)];
                 
                 handleWoundChange(randomChar, Math.min(4, randomChar.wounds + amount));
                 addLog(`[RANDOM WOUND]: ${randomChar.name} suffered ${amount} Wound(s) from ${reason}.`);
@@ -1165,7 +1175,9 @@
                     manualAtk: '',
                     manualDef: '',
                     isAiming: false,
-                    isAssisted: false
+                    isAssisted: false,
+                    useOvercharge: false,
+                    isStationary: false
                 });
                 setCombatPrompt({ charId: char.id });
             };
@@ -1211,7 +1223,9 @@
                 let atkMod = 0;
                 const wEffects = wData?.effects || '';
 
-                if (wModData.effect.includes('+1 to hit')) atkMod += 1;
+                if (wModData.effect.includes('+1 to hit') && weaponModName !== 'Custom Foregrip') atkMod += 1;
+                if (weaponModName === 'Custom Foregrip' && combatForm.isStationary) atkMod += 1;
+
                 if (wEffects.includes('–1 to Melee attacks') && weaponType === 'melee') atkMod -= 1;
                 if (tData.traits.includes('Low-Profile') && weaponType === 'ranged') atkMod -= 1;
                 
@@ -1258,12 +1272,23 @@
                         ddMod -= 2;
                     }
 
-                    if (wModData.effect.includes('+1 damage')) damage += 1;
+                    if (wModData.effect.includes('+1 damage') && weaponModName !== 'Custom Foregrip') damage += 1;
+                    if (weaponModName === 'Custom Foregrip' && combatForm.isStationary) damage += 1;
+
                     if (wModData.effect.includes('+1 melee damage') && weaponType === 'melee') damage += 1;
-                    if (wModData.effect.includes('+4 damage')) damage += 4;
-                    if (wModData.effect.includes('–4 target DD') || wModData.effect.includes('–1 target DD')) {
-                        if (wModData.effect.includes('–4 target DD')) ddMod -= 4;
-                        if (wModData.effect.includes('–1 target DD')) ddMod -= 1;
+
+                    if (wModData.effect.includes('+4 damage') && combatForm.useOvercharge) {
+                        damage += 4;
+                        ddMod -= 4;
+                        const cellIndex = char.uItems.findIndex(i => i === 'Power Cell' && !char.live.uItemUsed?.[i]);
+                        if (cellIndex !== -1) {
+                            handleLiveUItemToggle(char.id, cellIndex);
+                            addLog(`${char.name} expended a Power Cell to activate Overcharge Port.`);
+                        }
+                    }
+
+                    if (wModData.effect.includes('–1 target DD')) {
+                        ddMod -= 1;
                     }
                     
                     const dd1 = rollDice(1, defSides);
@@ -1423,7 +1448,8 @@
                     // Armor mods
                     if (target.evaMods.includes('Carbon Fiber Plates')) ddMod += 1;
 
-                    if (wEffects.includes('Fail = target is Stunned') && target.evaMods.includes('Hardened Suit System')) {
+                    const isStunAttack = wEffects.includes('Fail = target is Stunned') || wEffects.includes('Fail=Stun') || wEffects.includes('Stun') || weaponName === 'Shock Baton';
+                    if (isStunAttack && target.evaMods.includes('Hardened Suit System')) {
                         ddMod += 1;
                     }
 
@@ -1724,7 +1750,7 @@
                         addLog(`All unique objectives for Level ${missionLevel} have already been identified.`);
                         return;
                     }
-                    randomKey = availableKeys[Math.floor(Math.random() * availableKeys.length)];
+                    randomKey = availableKeys[Math.floor(getSecureRandom() * availableKeys.length)];
                 }
 
                 const newObjText = levelObjectives[randomKey];
@@ -2083,8 +2109,8 @@
             };
 
             const getDeploymentText = () => {
-                const d1 = Math.floor(Math.random() * 4) + 1;
-                const d2 = Math.floor(Math.random() * 4) + 1;
+                const d1 = Math.floor(getSecureRandom() * 4) + 1;
+                const d2 = Math.floor(getSecureRandom() * 4) + 1;
                 if (d1 === d2) return `Corner ${d1} (x4 models)`;
                 return `Corner ${d1} (x2 models), Corner ${d2} (x2 models)`;
             };
@@ -2107,7 +2133,7 @@
                     else if (rollVal === 10) { text = "Pressure Building. No immediate effect. Next Hitch uses Level II table."; }
                 } else if (lvl === 2) {
                     if (rollVal === 1) {
-                        const subRoll = Math.floor(Math.random() * 6) + 1;
+                        const subRoll = Math.floor(getSecureRandom() * 6) + 1;
                         if (subRoll <= 3) { text = "Uneasy Silence -> Raiders spawn (Cull Protocol)."; spawnedEnemy = 'Raiders'; pCheck = true; }
                         else { text = "Uneasy Silence -> All Clear."; }
                     }
@@ -2136,7 +2162,7 @@
                 if (spawnedEnemy) {
                     const deployText = getDeploymentText();
                     if (isPrimeChecked && pCheck) {
-                        const primeRoll = Math.floor(Math.random() * 6) + 1;
+                        const primeRoll = Math.floor(getSecureRandom() * 6) + 1;
                         if (primeRoll <= 3 || nextMhuHitchPrime) {
                             text += ` -> [Prime Check: ${primeRoll}] [PRIME SPAWNS!] [Deploy: ${deployText}]`;
                             let primeType = `Prime (${spawnedEnemy})`;
@@ -2187,8 +2213,8 @@
                 let text = logPrefix;
                 
                 if (roll === 10 && effectiveLevel === 3) {
-                    const r1 = Math.floor(Math.random() * 9) + 1; 
-                    const r2 = Math.floor(Math.random() * 9) + 1;
+                    const r1 = Math.floor(getSecureRandom() * 9) + 1;
+                    const r2 = Math.floor(getSecureRandom() * 9) + 1;
                     text += `EVERYTHING BREAKS! -> Result 1: ${processHitchEvent(effectiveLevel, r1)} AND Result 2: ${processHitchEvent(effectiveLevel, r2)}`;
                 } else {
                     text += processHitchEvent(effectiveLevel, roll);
@@ -2406,15 +2432,15 @@
 
             // Campaign Helpers
             const generateContract = (type) => {
-                const sizeRoll = Math.floor(Math.random() * 3) + 1;
+                const sizeRoll = Math.floor(getSecureRandom() * 3) + 1;
                 const sizeText = sizeRoll === 1 ? 'Small (1-3 MHU)' : sizeRoll === 2 ? 'Medium (4-6 MHU)' : 'Large (7-9 MHU)';
-                const comp = CONTRACT_COMPLICATIONS[Math.floor(Math.random() * CONTRACT_COMPLICATIONS.length)];
+                const comp = CONTRACT_COMPLICATIONS[Math.floor(getSecureRandom() * CONTRACT_COMPLICATIONS.length)];
                 
                 let target = "";
                 if (type === 'PO') {
-                    target = CONTRACT_TARGETS[Math.floor(Math.random() * CONTRACT_TARGETS.length)];
+                    target = CONTRACT_TARGETS[Math.floor(getSecureRandom() * CONTRACT_TARGETS.length)];
                 } else {
-                    target = OFF_CONTRACT_TARGETS[Math.floor(Math.random() * OFF_CONTRACT_TARGETS.length)];
+                    target = OFF_CONTRACT_TARGETS[Math.floor(getSecureRandom() * OFF_CONTRACT_TARGETS.length)];
                 }
                 
                 setActiveContract({ type, size: sizeText, target, complications: comp });
@@ -2444,19 +2470,19 @@
                     if (crew.length > 0) {
                         const aliveCrew = crew.filter(c => c.wounds < 4 && c.status === 'Active');
                         const targetPool = aliveCrew.length > 0 ? aliveCrew : crew;
-                        const randomChar = targetPool[Math.floor(Math.random() * targetPool.length)];
+                        const randomChar = targetPool[Math.floor(getSecureRandom() * targetPool.length)];
                         const availableScars = SCARS.filter(s => !randomChar.scars.includes(s));
-                        scarName = availableScars.length > 0 ? availableScars[Math.floor(Math.random() * availableScars.length)] : SCARS[0];
+                        scarName = availableScars.length > 0 ? availableScars[Math.floor(getSecureRandom() * availableScars.length)] : SCARS[0];
                         
                         updateCharacter(randomChar.id, 'addScar', scarName);
                         randomName = randomChar.name;
                     }
                     auditText += `[ENFORCEMENT AUDIT]: Lose ${lost} Salvage. +1 ACR next job. ${randomName} suffers random Scar: ${scarName}.`;
                 } else {
-                    const itemsLost = Math.min(legacyLocker.length, Math.floor(Math.random() * 4) + 1);
+                    const itemsLost = Math.min(legacyLocker.length, Math.floor(getSecureRandom() * 4) + 1);
                     let newLocker = [...legacyLocker];
                     for(let i=0; i<itemsLost; i++) {
-                        const idx = Math.floor(Math.random() * newLocker.length);
+                        const idx = Math.floor(getSecureRandom() * newLocker.length);
                         newLocker.splice(idx, 1);
                     }
                     setLegacyLocker(newLocker);
@@ -2742,7 +2768,7 @@
                                                 </button>
                                                 <button onClick={() => {
                                                     const availableScars = SCARS.filter(s => !char.scars.includes(s));
-                                                    const randomScar = availableScars.length > 0 ? availableScars[Math.floor(Math.random() * availableScars.length)] : SCARS[0];
+                                                    const randomScar = availableScars.length > 0 ? availableScars[Math.floor(getSecureRandom() * availableScars.length)] : SCARS[0];
                                                     updateCharacter(char.id, 'addScar', randomScar);
                                                     updateCharacter(char.id, 'redlineSurvivals', char.redlineSurvivals + 1);
                                                     updateCharacter(char.id, 'wounds', 3);
@@ -3046,6 +3072,16 @@
                                         <label className="flex items-center gap-2 text-sm text-slate-300">
                                             <input type="checkbox" checked={combatForm.isAssisted} onChange={e => setCombatForm({...combatForm, isAssisted: e.target.checked})} className="accent-amber-500" /> Assisted (+2 Atk or TDB)
                                         </label>
+                                            {crew.find(c => c.id === combatPrompt.charId)?.rangedMod === 'Overcharge Port' && combatForm.weaponType === 'ranged' && (
+                                                <label className="flex items-center gap-2 text-xs font-bold text-red-400">
+                                                    <input type="checkbox" checked={combatForm.useOvercharge} onChange={e => setCombatForm({...combatForm, useOvercharge: e.target.checked})} disabled={!crew.find(c => c.id === combatPrompt.charId)?.uItems.some((i, idx) => i === 'Power Cell' && !crew.find(c => c.id === combatPrompt.charId)?.live.uItemUsed?.[idx])} className="accent-red-500" /> Use Overcharge (-1 Power Cell, +4 Dmg, -4 DD)
+                                                </label>
+                                            )}
+                                            {crew.find(c => c.id === combatPrompt.charId)?.rangedMod === 'Custom Foregrip' && combatForm.weaponType === 'ranged' && (
+                                                <label className="flex items-center gap-2 text-xs font-bold text-amber-400">
+                                                    <input type="checkbox" checked={combatForm.isStationary} onChange={e => setCombatForm({...combatForm, isStationary: e.target.checked})} className="accent-amber-500" /> Stationary (+1 Atk, +1 Dmg)
+                                                </label>
+                                            )}
                                     </div>
                                     <div className="flex gap-4 border-t border-slate-700 pt-4">
                                         <div className="flex-1">
@@ -3100,7 +3136,7 @@
                                     <button onClick={() => {
                                         const aliveCrew = crew.filter(c => c.status === 'Active');
                                         const targetPool = aliveCrew.length > 0 ? aliveCrew : crew;
-                                        const randomChar = targetPool[Math.floor(Math.random() * targetPool.length)];
+                                        const randomChar = targetPool[Math.floor(getSecureRandom() * targetPool.length)];
                                         applyPenaltyToChar(randomChar, pendingPenaltyPrompt, true);
                                     }} className="flex-1 px-3 py-2 bg-slate-800 border border-slate-600 hover:bg-slate-700 rounded text-slate-300 text-xs font-bold transition-colors">
                                         Select Randomly
