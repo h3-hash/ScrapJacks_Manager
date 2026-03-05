@@ -833,12 +833,34 @@
                 setPendingChoices([]);
                 
                 setCrew(prev => {
+                    let nextCrewLocker = [...crewLocker];
                     let updatedCrew = [...prev];
                     
                     if (updatedCrew.length > newConfig.crewCount) {
                         updatedCrew = updatedCrew.slice(0, newConfig.crewCount);
                     }
                     
+                    // Assign existing crew the new default suits, but stash their old suits in locker first
+                    updatedCrew = updatedCrew.map((member, i) => {
+                        let suitItemName = member.suit;
+                        if (member.evaMods && member.evaMods.length > 0) {
+                            suitItemName += ` (Mods: ${member.evaMods.join(', ')})`;
+                        }
+                        nextCrewLocker.push({
+                            id: generateId(),
+                            name: suitItemName,
+                            type: 'evaSuit',
+                            baseSuit: member.suit,
+                            evaMods: [...(member.evaMods || [])]
+                        });
+
+                        return {
+                            ...member,
+                            suit: newConfig.suits[i] || 'Workskin',
+                            evaMods: [] // Clear mods, as they transferred with the old suit
+                        };
+                    });
+
                     while (updatedCrew.length < newConfig.crewCount) {
                         const i = updatedCrew.length;
                         updatedCrew.push({
@@ -866,6 +888,7 @@
                             live: { usedMove: false, usedLoad: false, usedFocus: false, usedGrit: false, uItemUsed: Array(6).fill(false), pushed: false, stunned: false }
                         });
                     }
+                    setCrewLocker(nextCrewLocker);
                     return updatedCrew;
                 });
             };
@@ -1687,6 +1710,9 @@
 
                 updateCharRollInput(char.id, '');
 
+                // Pushing always costs 1 AC
+                setAircharge(prev => Math.max(0, prev - 1));
+
                 if (finalRoll >= 4) {
                     setCrew(prev => prev.map(c => {
                         if (c.id === char.id) {
@@ -1774,6 +1800,30 @@
                     newChar.ranged = gear.name;
                     assigned = true;
                 }
+                // Handle EVA Suit assignment from locker
+                else if (gear.type === 'evaSuit') {
+                    // Stash current suit into locker
+                    let oldSuitItemName = newChar.suit;
+                    if (newChar.evaMods && newChar.evaMods.length > 0) {
+                        oldSuitItemName += ` (Mods: ${newChar.evaMods.join(', ')})`;
+                    }
+                    const oldSuitLockerItem = {
+                        id: generateId(),
+                        name: oldSuitItemName,
+                        type: 'evaSuit',
+                        baseSuit: newChar.suit,
+                        evaMods: [...(newChar.evaMods || [])]
+                    };
+
+                    // Assign new suit and mods
+                    newChar.suit = gear.baseSuit;
+                    newChar.evaMods = [...(gear.evaMods || [])];
+
+                    // Enqueue adding the old suit to locker
+                    setCrewLocker(prev => [...prev.filter(g => g.id !== gear.id), oldSuitLockerItem]);
+
+                    assigned = true;
+                }
                 // Handle Special rewards that need manual adjustment (Suits, Choices)
                 else {
                     setModalConfig({ 
@@ -1787,7 +1837,7 @@
                 }
 
                 if (assigned) {
-                    if (!isFromChoicePrompt) {
+                    if (!isFromChoicePrompt && gear.type !== 'evaSuit') {
                         setCrewLocker(prev => prev.filter(g => g.id !== gear.id));
                     }
                     setCrew(prev => prev.map(c => c.id === charId ? newChar : c));
@@ -2244,11 +2294,22 @@
                     setTraces(t => t + 1);
                     addLog(`+1 Trace added to Crew Record.`);
 
-                    if (activeQuietPull.roll === 1) setNextMhuHitchPrime(true);
+                    if (activeQuietPull.roll === 1) {
+                        addLog("Rolling Immediate Hitch due to Quiet Pull failure...");
+                        rollHitch(missionLevel, false);
+                    }
                     if (activeQuietPull.roll === 3) setAircharge(a => Math.max(0, a - 1));
-                    if (activeQuietPull.roll === 4) setNextMhuHitchPrime(true);
+                    if (activeQuietPull.roll === 4) {
+                        addLog("Maintenance Drones will replace the next Hitch.");
+                        // We could build a complex override system, but logging and letting players handle it mechanically is acceptable,
+                        // or we can manually enforce it by spawning them immediately or at the next hitch.
+                        // For simplicity without adding massive state complexity for a specific enemy,
+                        // we'll instruct the player.
+                    }
                     if (activeQuietPull.roll === 5) setNextMhuHitchPlus1(true);
-                    if (activeQuietPull.roll === 7) setNextMhuHitchPrime(true);
+                    if (activeQuietPull.roll === 7) {
+                        addLog("Claim-jumpers noticed. Spawn D6 Raiders at the next Hitch.");
+                    }
                 }
                 setActiveQuietPull(null);
             };
@@ -3129,6 +3190,10 @@
                         } else if (gear.name.includes('Ranged')) {
                             options = Object.keys(WEAPONS_RANGED);
                             category = 'Ranged Weapon';
+                        } else if (gear.name.includes('Weapon')) {
+                            // Handle 'Common Weapon Choice'
+                            options = [...Object.keys(WEAPONS_MELEE), ...Object.keys(WEAPONS_RANGED).filter(k => !WEAPONS_RANGED[k].ydOnly)];
+                            category = 'Weapon';
                         } else {
                             // Fallback, combine some common ones
                             options = [...Object.keys(U_ITEMS).filter(k => k !== 'Empty'), ...Object.keys(EVA_MODS), ...Object.keys(WEAPON_MODS).filter(k => k !== 'None')];
@@ -3737,17 +3802,19 @@
                                                     <option value="">Assign to...</option>
                                                     {crew.filter(c => c.status === 'Active' && c.wounds < 4).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                                                 </select>
+                                                {(gear.type === 'uItem' || gear.type === 'evaSuit') && (
+                                                    <button
+                                                        onClick={() => {
+                                                            setSalvage(prev => prev + 4);
+                                                            setCrewLocker(prev => prev.filter(g => g.id !== gear.id));
+                                                        }}
+                                                        className="text-emerald-500 hover:text-emerald-400 font-bold px-2 py-1 bg-slate-900 rounded border border-slate-700 hover:border-emerald-900 transition-colors"
+                                                        title="Sell for 4 Salvage"
+                                                    >
+                                                        SELL (4)
+                                                    </button>
+                                                )}
                                                 <button 
-                                                    onClick={() => {
-                                                        setSalvage(prev => prev + 4);
-                                                        setCrewLocker(prev => prev.filter(g => g.id !== gear.id));
-                                                    }}
-                                                    className="text-emerald-500 hover:text-emerald-400 font-bold px-2 py-1 bg-slate-900 rounded border border-slate-700 hover:border-emerald-900 transition-colors"
-                                                    title="Sell for 4 Salvage"
-                                                >
-                                                    SELL (4)
-                                                </button>
-                                                <button
                                                     onClick={() => setCrewLocker(prev => prev.filter(g => g.id !== gear.id))}
                                                     className="text-slate-500 hover:text-red-500 font-bold px-2 py-1 bg-slate-900 rounded border border-slate-700 hover:border-red-900 transition-colors"
                                                     title="Discard Item"
