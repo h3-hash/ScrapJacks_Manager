@@ -567,7 +567,7 @@
             const [aircharge, setAircharge] = useState(SHIPS['Class C - Tug'].aircharge);
             const [crewName, setCrewName] = useState(() => getRandomCrewName());
             const [crew, setCrew] = useState(() => generateInitialCrew('Class C - Tug'));
-            const [legacyLocker, setLegacyLocker] = useState([]);
+            const [crewLocker, setCrewLocker] = useState([]);
             
             // Campaign State
             const [jobCount, setJobCount] = useState(1);
@@ -636,7 +636,7 @@
             // Save and Load Handlers
             const exportData = () => {
                 const dataToSave = {
-                    shipClass, salvage, acrDebt, aircharge, crewName, crew, legacyLocker,
+                    shipClass, salvage, acrDebt, aircharge, crewName, crew, crewLocker,
                     jobCount, campaignLog, traces, shipUpgrades, activeContract, cleanExitGoal,
                     turn, phase, playLog, missionLevel, activeObjectives, activeQuietPull,
                     pressureBuilding, hitchSkips, nextMhuHazardClear, nextMhuHitchMinus1, nextMhuHitchPlus1, nextMhuHitchHullShift, nextMhuHitchPrime, crewBuffs,
@@ -677,7 +677,7 @@
                             })));
                         }
                         
-                        if(data.legacyLocker) setLegacyLocker(data.legacyLocker);
+                        if(data.crewLocker) setCrewLocker(data.crewLocker);
                         if(data.jobCount !== undefined) setJobCount(data.jobCount);
                         if(data.campaignLog) setCampaignLog(data.campaignLog);
                         if(data.traces !== undefined) setTraces(data.traces);
@@ -751,12 +751,12 @@
             const applyShipChange = (newShip, rollLegacy, manualRollStr) => {
                 const newConfig = SHIPS[newShip];
                 
-                let items = rollLegacy ? [] : [...legacyLocker];
+                let items = [...crewLocker];
                 let buff = null;
                 
                 if (rollLegacy) {
                     const roll = getRoll(manualRollStr, 1, 6);
-                    let logMsg = `Legacy Locker Roll [${roll}]: `;
+                    let logMsg = `Crew Locker Found Items [${roll}]: `;
 
                     switch(roll) {
                         case 1:
@@ -787,7 +787,7 @@
                             break;
                     }
                     addCampaignLog(`Acquired ${newShip}. ${logMsg}`);
-                    setLegacyLocker(items);
+                    setCrewLocker(items);
                     if (buff) setCrewBuffs(prev => [...prev, buff]);
                 } else {
                     addCampaignLog(`Acquired ${newShip}. Ship upgrades reset.`);
@@ -1669,9 +1669,9 @@
                 }
 
                 if (assigned) {
-                    setLegacyLocker(prev => prev.filter(g => g.id !== gear.id));
+                    setCrewLocker(prev => prev.filter(g => g.id !== gear.id));
                     setCrew(prev => prev.map(c => c.id === charId ? newChar : c));
-                    addLog(`Assigned ${gear.name} from Legacy Locker to ${char.name}.`);
+                    addLog(`Assigned ${gear.name} from Crew Locker to ${char.name}.`);
                 }
             };
 
@@ -1927,7 +1927,7 @@
                     if (sAdd > 0) setSalvage(prev => prev + sAdd);
                     if (aAdd > 0) setAircharge(prev => prev + aAdd);
                     if (gear.length > 0) {
-                        setLegacyLocker(prev => [...prev, ...gear.map(g => ({ name: g, type: (g.includes('Suit') || g.includes('Choice') || g.includes('OR')) ? 'special' : 'uItem', id: generateId() }))]);
+                        setCrewLocker(prev => [...prev, ...gear.map(g => ({ name: g, type: (g.includes('Suit') || g.includes('Choice') || g.includes('OR')) ? 'special' : 'uItem', id: generateId() }))]);
                     }
 
                     let logMsg = `${isObj ? 'Objective Completed' : 'POI Resolved'} by ${actorStr}: ${obj.text.split('.')[0].trim()}. `;
@@ -2014,7 +2014,7 @@
 
                 setSalvage(prev => prev + gainedSalvage);
                 if (gainedGear) {
-                    setLegacyLocker(prev => [...prev, { ...gainedGear, id: generateId() }]);
+                    setCrewLocker(prev => [...prev, { ...gainedGear, id: generateId() }]);
                 }
                 
                 if (!silent) addLog(`${actorPrefix}${resultText}`);
@@ -2094,7 +2094,7 @@
                     
                     if (activeQuietPull.roll === 1) setSalvage(s => s + rollDice(2,4));
                     if (activeQuietPull.roll === 2) setSalvage(s => s + rollDice(1,4));
-                    if (activeQuietPull.roll === 3) setLegacyLocker(p=>[...p, {name: getRandomItem('uItem'), type: 'uItem', id: generateId()}]);
+                    if (activeQuietPull.roll === 3) setCrewLocker(p=>[...p, {name: getRandomItem('uItem'), type: 'uItem', id: generateId()}]);
                     if (activeQuietPull.roll === 4) setSalvage(s => s + rollDice(1,4));
                     
                     if (activeQuietPull.roll === 7) {
@@ -2401,7 +2401,7 @@
                 setAircharge(SHIPS['Class C - Tug'].aircharge);
                 setCrewName(getRandomCrewName());
                 setCrew(generateInitialCrew('Class C - Tug'));
-                setLegacyLocker([]);
+                setCrewLocker([]);
                 setJobCount(1);
                 setCampaignLog([]);
                 setTraces(0);
@@ -2492,14 +2492,14 @@
                     }
                     auditText += `[ENFORCEMENT AUDIT]: Lose ${lost} Salvage. +1 ACR next job. ${randomName} suffers random Scar: ${scarName}.`;
                 } else {
-                    const itemsLost = Math.min(legacyLocker.length, Math.floor(getSecureRandom() * 4) + 1);
-                    let newLocker = [...legacyLocker];
+                    const itemsLost = Math.min(crewLocker.length, Math.floor(getSecureRandom() * 4) + 1);
+                    let newLocker = [...crewLocker];
                     for(let i=0; i<itemsLost; i++) {
                         const idx = Math.floor(getSecureRandom() * newLocker.length);
                         newLocker.splice(idx, 1);
                     }
-                    setLegacyLocker(newLocker);
-                    auditText += `[FULL LOCKDOWN]: Lose ALL Salvage. Next job must be PO. Automatic Audit follows. ${itemsLost} items seized from Legacy Locker.`;
+                    setCrewLocker(newLocker);
+                    auditText += `[FULL LOCKDOWN]: Lose ALL Salvage. Next job must be PO. Automatic Audit follows. ${itemsLost} items seized from Crew Locker.`;
                     setSalvage(0);
                 }
 
@@ -2683,8 +2683,8 @@
                                         <h3 className="text-xl font-bold text-white mb-2">Reward Choice</h3>
                                         <p className="text-slate-300 mb-6 text-sm">{choice.source} completed. Choose your recovered gear:</p>
                                         <div className="flex flex-col gap-3">
-                                            <button onClick={() => resolveChoice(() => setLegacyLocker(p => [...p, { name: 'Sunjet', type: 'special', id: generateId() }]), "Sunjet")} className="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 rounded text-white font-bold text-sm shadow">Sunjet</button>
-                                            <button onClick={() => resolveChoice(() => setLegacyLocker(p => [...p, { name: 'Power Shears', type: 'special', id: generateId() }]), "Power Shears")} className="px-4 py-2 bg-indigo-700 hover:bg-indigo-600 rounded text-white font-bold text-sm shadow">Power Shears (Large)</button>
+                                            <button onClick={() => resolveChoice(() => setCrewLocker(p => [...p, { name: 'Sunjet', type: 'special', id: generateId() }]), "Sunjet")} className="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 rounded text-white font-bold text-sm shadow">Sunjet</button>
+                                            <button onClick={() => resolveChoice(() => setCrewLocker(p => [...p, { name: 'Power Shears', type: 'special', id: generateId() }]), "Power Shears")} className="px-4 py-2 bg-indigo-700 hover:bg-indigo-600 rounded text-white font-bold text-sm shadow">Power Shears (Large)</button>
                                         </div>
                                     </div>
                                 </div>
@@ -3170,7 +3170,7 @@
                                 {SHIPS[shipChangePrompt.newShip].crewCount < crew.length && (
                                     <p className="text-red-400 font-bold mb-4 text-sm border border-red-900/50 p-2 rounded bg-red-950/20">WARNING: This limits your crew to {SHIPS[shipChangePrompt.newShip].crewCount} and will permanently remove the last Scrapjack(s) on your roster.</p>
                                 )}
-                                <p className="text-amber-400 mb-6 text-sm font-bold border-t border-slate-700 pt-4">Would you like to roll on the Legacy Equipment table? (This replaces your current Legacy Locker).</p>
+                                <p className="text-amber-400 mb-6 text-sm font-bold border-t border-slate-700 pt-4">Would you like to roll on the Legacy Equipment table? (This replaces your current Crew Locker).</p>
                                 <div className="flex flex-col gap-2">
                                     <div className="flex gap-2">
                                         <input type="number" placeholder="1d6" value={manualRolls.legacy || ''} onChange={e => setManualRolls({...manualRolls, legacy: e.target.value})} className="w-16 bg-slate-900 border border-slate-700 rounded text-white text-center focus:outline-none focus:border-amber-500" />
@@ -3410,19 +3410,19 @@
                         </div>
                     )}
 
-                    {/* LEGACY LOCKER (GLOBAL) */}
+                    {/* CREW LOCKER (GLOBAL) */}
                     {(activeTab === 'roster' || activeTab === 'live' || activeTab === 'campaign') && (
                     <div className="bg-slate-900 border-b border-slate-700 p-4 no-print shadow-inner">
                         <div className="max-w-6xl mx-auto">
                             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex justify-between items-end">
-                                <span>Legacy Locker</span>
+                                <span>Crew Locker</span>
                                 <span className="text-[10px] font-normal italic lowercase tracking-normal">Persistent gear storage. Assigns gear directly to crew.</span>
                             </h3>
-                            {legacyLocker.length === 0 ? (
+                            {crewLocker.length === 0 ? (
                                 <div className="text-xs text-slate-500 italic bg-slate-800/50 p-2 rounded border border-slate-700">Locker is empty. Gear recovered during missions will appear here.</div>
                             ) : (
                                 <div className="flex flex-wrap gap-2">
-                                    {legacyLocker.map(gear => (
+                                    {crewLocker.map(gear => (
                                         <div key={gear.id} className="bg-slate-800 border border-slate-600 rounded px-3 py-2 flex flex-wrap items-center gap-3 shadow-md">
                                             <span className="text-sm text-amber-500 font-bold">{gear.name}</span>
                                             <div className="flex items-center gap-1">
@@ -3439,11 +3439,21 @@
                                                     {crew.filter(c => c.status === 'Active' && c.wounds < 4).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                                                 </select>
                                                 <button 
-                                                    onClick={() => setLegacyLocker(prev => prev.filter(g => g.id !== gear.id))}
+                                                    onClick={() => {
+                                                        setSalvage(prev => prev + 4);
+                                                        setCrewLocker(prev => prev.filter(g => g.id !== gear.id));
+                                                    }}
+                                                    className="text-emerald-500 hover:text-emerald-400 font-bold px-2 py-1 bg-slate-900 rounded border border-slate-700 hover:border-emerald-900 transition-colors"
+                                                    title="Sell for 4 Salvage"
+                                                >
+                                                    SELL (4)
+                                                </button>
+                                                <button
+                                                    onClick={() => setCrewLocker(prev => prev.filter(g => g.id !== gear.id))}
                                                     className="text-slate-500 hover:text-red-500 font-bold px-2 py-1 bg-slate-900 rounded border border-slate-700 hover:border-red-900 transition-colors"
                                                     title="Discard Item"
                                                 >
-                                                    REMOVE
+                                                    &times;
                                                 </button>
                                             </div>
                                         </div>
@@ -3726,6 +3736,20 @@
                                                                             >
                                                                                 {Object.keys(U_ITEMS).map(item => <option key={item} value={item}>{item}</option>)}
                                                                             </select>
+                                                                            {char.uItems[i] && char.uItems[i] !== 'Empty' && (
+                                                                                <button
+                                                                                    onClick={() => {
+                                                                                        setSalvage(prev => prev + 4);
+                                                                                        const newItems = [...char.uItems];
+                                                                                        newItems[i] = 'Empty';
+                                                                                        updateCharacter(char.id, 'uItems', newItems);
+                                                                                    }}
+                                                                                    className="text-[9px] font-bold text-emerald-500 hover:text-emerald-400 bg-slate-950 px-1.5 py-0.5 rounded border border-emerald-900/50 flex-shrink-0"
+                                                                                    title="Sell for 4 Salvage"
+                                                                                >
+                                                                                    SELL (4)
+                                                                                </button>
+                                                                            )}
                                                                         </div>
                                                                         {char.uItems[i] && char.uItems[i] !== 'Empty' && (
                                                                             <p className="text-[9px] text-slate-400 italic pl-6">{U_ITEMS[char.uItems[i]].effect}</p>
@@ -4598,9 +4622,9 @@
                                                         <div className="print-box" style={{borderBottomWidth: '2px'}}></div>
                                                     </div>
                                                     <div className="print-section" style={{flex: 1}}>
-                                                        <div style={{fontSize:'10px', fontWeight:'bold'}}>LEGACY LOCKER</div>
+                                                        <div style={{fontSize:'10px', fontWeight:'bold'}}>CREW LOCKER</div>
                                                         <div className="print-box" style={{borderBottomWidth: '2px', padding: '2px', fontSize: '8px', whiteSpace: 'normal'}}>
-                                                            {legacyLocker.map(g => g.name).join(', ')}
+                                                            {crewLocker.map(g => g.name).join(', ')}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -4668,9 +4692,9 @@
                                                     <div className="print-row"><strong>CLEAN EXIT TARGET:</strong> {cleanExitGoal}</div>
                                                 </div>
                                                 <div className="print-section">
-                                                    <div className="print-section-title">LEGACY LOCKER ITEMS</div>
+                                                    <div className="print-section-title">CREW LOCKER ITEMS</div>
                                                     <div className="rules-text">
-                                                        {legacyLocker.length > 0 ? legacyLocker.map(g => g.name).join(', ') : 'Empty'}
+                                                        {crewLocker.length > 0 ? crewLocker.map(g => g.name).join(', ') : 'Empty'}
                                                     </div>
                                                 </div>
                                             </div>
