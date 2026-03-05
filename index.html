@@ -389,6 +389,9 @@
         };
 
         const VERSION_HISTORY = [
+            { version: "1.55.0", date: "2026-03-05", notes: ["Updated Points of Interest tables to exact rulebook text.", "Fixed POI failure logic to accurately trigger specific Hitch penalties (e.g. Alarm +1, forced Prime generation, and Hull Shifts)."] },
+            { version: "1.54.0", date: "2026-03-05", notes: ["Upgraded random number generator to use cryptographically secure `crypto.getRandomValues()` for all dice rolls and random table generation."] },
+            { version: "1.53.0", date: "2026-03-05", notes: ["Updated all equipment, weapon, utility, and mod tables to match exact rulebook verbiage.", "Automated complex combat modifiers like Overcharge Port cost, Custom Foregrip stationary requirement, and Shock Baton's second defense roll logic.", "Fixed Hardened Suit System to correctly trigger against all Stun attacks."] },
             { version: "1.52.0", date: "2026-03-04", notes: ["Rulebook Compliance Pass: Corrected Large Xeno Types to proper Tier II stats (D8/D8).", "Corrected Power Shears and Vibro-Knife encumbrance costs to match the rulebook.", "Removed unused legacy tables to optimize performance and prevent truncation."] },
             { version: "1.51.0", date: "2026-03-04", notes: ["Fully integrated Grenade combat mechanics directly into Utility Slots.", "Clicking a Grenade (Dazzler or EMP) now prompts a specialized 'Throw Grenade' combat modal that consumes an Action Die.", "Added support for target visibility penalty (-1 Attack if indirect/not visible).", "Added automated On Target / Off Target resolution. A successful throw perfectly centers the LBT and can auto-resolve against a selected primary target based on their type (Robotic vs Organic).", "Failed throws automatically execute the 1D10 Deviation Scatter mechanic, calculating exact direction and drift distance."] },
             { version: "1.50.0", date: "2026-03-04", notes: ["Implemented 'Pending Choices Queue' system. Resolving Quiet Pulls and Specific Objectives (like L2_6 Black Box) now immediately surfaces a mandatory choice popup for selecting specific rewards or mechanical outcomes instead of just a text log."] },
@@ -584,6 +587,7 @@
             const [objectivePrompt, setObjectivePrompt] = useState(null);
             const [tableRollPrompt, setTableRollPrompt] = useState(null);
             const [grenadePrompt, setGrenadePrompt] = useState(null);
+            const [showChangelog, setShowChangelog] = useState(false);
             
             const [combatForm, setCombatForm] = useState({ vital: 'load', weaponType: 'ranged', targetId: '', manualAtk: '', manualDef: '', isAiming: false, isAssisted: false, useOvercharge: false, isStationary: false });
             const [qpForm, setQpForm] = useState({ actorId: '', die: 'load' });
@@ -3208,9 +3212,6 @@
                                 >
                                     <IconPrinter /> PDF
                                 </button>
-                                <button onClick={() => setActiveTab('changelog')} className={`px-4 py-2 rounded font-semibold flex items-center gap-2 ${activeTab === 'changelog' ? 'bg-slate-700 text-white shadow' : 'text-slate-400 hover:text-white'}`}>
-                                    <IconLog /> Version Log
-                                </button>
                                 <button onClick={exportData} className="px-4 py-2 rounded font-semibold flex items-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800 border-l border-slate-700 pl-4 ml-2">
                                     <IconSave /> Save
                                 </button>
@@ -4485,27 +4486,6 @@
                             </div>
                         )}
 
-                        {/* CHANGELOG TAB */}
-                        {activeTab === 'changelog' && (
-                            <div className="block no-print text-slate-300 max-w-4xl mx-auto bg-slate-800 p-8 rounded-xl shadow-lg mt-6">
-                                <h2 className="text-2xl font-bold text-white mb-6 border-b border-slate-700 pb-2">Version Log</h2>
-                                <div className="space-y-6">
-                                    {VERSION_HISTORY.map((log, idx) => (
-                                        <div key={idx} className="border-l-2 border-amber-500 pl-4">
-                                            <div className="flex items-baseline gap-3 mb-2">
-                                                <h3 className="text-lg font-bold text-amber-500">v{log.version}</h3>
-                                                <span className="text-xs text-slate-500">{log.date}</span>
-                                            </div>
-                                            <ul className="list-disc list-inside space-y-1 text-sm text-slate-400">
-                                                {log.notes.map((note, nIdx) => (
-                                                    <li key={nIdx}>{note}</li>
-                                                ))}
-                                            </ul>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
 
                         {/* PRINT ONLY SECTION - Handles both Roster and AAR Layouts */}
                         <div className="print-only print-container">
@@ -4795,6 +4775,40 @@
                                 </div>
                             )}
                         </div>
+
+                        {/* Footer Version Link */}
+                        <div className="fixed bottom-2 right-4 no-print">
+                            <button onClick={() => setShowChangelog(true)} className="text-[10px] text-slate-600 hover:text-slate-400 transition-colors">
+                                v{VERSION_HISTORY[0].version}
+                            </button>
+                        </div>
+
+                        {/* Changelog Modal */}
+                        {showChangelog && (
+                            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 no-print" onClick={() => setShowChangelog(false)}>
+                                <div className="bg-slate-800 border border-slate-600 p-6 rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] flex flex-col" onClick={e => e.stopPropagation()}>
+                                    <div className="flex justify-between items-center mb-4 border-b border-slate-700 pb-2">
+                                        <h3 className="text-xl font-bold text-white">Version Log</h3>
+                                        <button onClick={() => setShowChangelog(false)} className="text-slate-400 hover:text-white font-bold text-xl">&times;</button>
+                                    </div>
+                                    <div className="overflow-y-auto custom-scrollbar pr-2 flex-1 space-y-6">
+                                        {VERSION_HISTORY.map((log, idx) => (
+                                            <div key={idx} className="border-l-2 border-amber-500 pl-4">
+                                                <div className="flex items-baseline gap-3 mb-2">
+                                                    <h3 className="text-lg font-bold text-amber-500">v{log.version}</h3>
+                                                    <span className="text-xs text-slate-500">{log.date}</span>
+                                                </div>
+                                                <ul className="list-disc list-inside space-y-1 text-sm text-slate-400">
+                                                    {log.notes.map((note, nIdx) => (
+                                                        <li key={nIdx}>{note}</li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             );
