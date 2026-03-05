@@ -77,22 +77,22 @@
         };
 
         const WEAPONS_MELEE = {
-            'Wrecking Bar': { uSlots: 0, effects: 'Hit up to 2 adj, +1 Break/Brace' },
-            'Pulaski Axe': { uSlots: 0, effects: '-2 target DD, +1 Break/Brace, Breach' },
-            'Power Shears': { uSlots: -1, effects: '-2 Move, -1 Melee, +1 DD, +2 Break/Brace, -4 target DD' },
-            'Cutter Torch': { uSlots: -1, effects: '-1 target DD, +2 Break/Brace (Costs 1 U-Slot)' },
-            'Shock Baton': { uSlots: 0, effects: 'Fail=Stun, Robots -2 DD' },
-            'Vibro-Knife': { uSlots: 0, effects: 'Breach' },
+            'Wrecking Bar': { uSlots: 0, effects: 'Hit up to two adjacent hostiles in melee. +1 to Break/Brace.' },
+            'Pulaski Axe': { uSlots: 0, effects: '–2 to defender’s DD. +1 to Break/Brace. Wound causes Suit Breach.' },
+            'Power Shears': { uSlots: -1, effects: '–2″ Movement, –1 to Melee attacks. +1 to user’s DD. +2 to Break/Brace. –4 to defender’s DD.' },
+            'Cutter Torch': { uSlots: 1, effects: '–1 to defender’s DD. +2 to Break/Brace. Grants +1 Utility Slot.' },
+            'Shock Baton': { uSlots: 0, effects: 'Blocked hits force a second DD roll. Fail = target is Stunned. Robotic targets suffer –2 to DD.' },
+            'Vibro-Knife': { uSlots: 1, effects: 'Wound causes Suit Breach. Grants +1 Utility Slot.' },
             'None': { uSlots: 0, effects: 'Unarmed combat only.'}
         };
 
         const WEAPONS_RANGED = {
-            'Coil Pistol': { uSlots: 0, ydOnly: false, effects: '3", target rolls DD twice' },
-            'Mag-Hook': { uSlots: 0, ydOnly: false, effects: 'Melee-3", -1 target DD, Knock/Pull' },
-            'Bolt-Driver': { uSlots: -1, ydOnly: false, effects: 'Melee-3", -4 target DD (Costs 1 U-Slot)' },
-            'Riot Gun': { uSlots: 0, ydOnly: true, effects: '6", -1 target DD, Breach' },
-            'PitBull': { uSlots: -1, ydOnly: true, effects: '12", target rolls DD twice (Costs 1 U-Slot)' },
-            'Sunjet': { uSlots: -2, ydOnly: true, effects: 'Teardrop, -4 target DD, Burn (Costs 2 U-Slots)' },
+            'Coil Pistol': { uSlots: 0, ydOnly: false, effects: 'Range: 3″. Defender rolls DD twice per attack.' },
+            'Mag-Hook': { uSlots: 0, ydOnly: false, effects: 'Range: Melee–3″. Imposes -1 Penalty on target’s DD. Does not Wound. DD Fail = Called Effect. Declare effect before attack: Knock Prone or Pull target adjacent.' },
+            'Bolt-Driver': { uSlots: -1, ydOnly: false, effects: 'Range: Melee–3″. –4 to defender’s DD. Reduces carry capacity (–1 U-Slot).' },
+            'Riot Gun': { uSlots: 0, ydOnly: true, effects: 'Range: 6″. –1 to target’s DD. Wound causes Suit Breach.' },
+            'PitBull': { uSlots: -1, ydOnly: true, effects: 'Range: 12″. Defender rolls DD twice per attack. Reduces carry capacity (–1 U-Slot).' },
+            'Sunjet': { uSlots: -2, ydOnly: true, effects: 'Teardrop template. –4 to target’s DD. Destroys scenic terrain items including POIs, if applicable. –1″ Movement, –2 U-Slots. Wound causes Burn.' },
             'None': { uSlots: 0, ydOnly: false, effects: 'No ranged capability.'}
         };
 
@@ -115,36 +115,36 @@
         };
         
         const EVA_MODS = {
-            'Mag-Boots': { effect: 'Ignore zero-G movement penalties.' },
-            'Carbon Fiber Plates': { effect: '+1 DD vs Physical damage.' },
-            'Shoulder Lamps': { effect: 'Ignore darkness penalties.' },
-            'Tool Harness': { effect: '+3 Utility Slots.' },
-            'Hardened Suit System': { effect: 'Ignore 1st Suit Breach per mission.' },
-            'Filter System': { effect: 'Ignore Toxic hazards.' }
+            'Mag-Boots': { effect: 'Ignore Zero-G. +1 vs Hull Shift and Hull Breach hazard rolls.' },
+            'Carbon Fiber Plates': { effect: '+1 DD vs Melee and Ranged attacks.' },
+            'Shoulder Lamps': { effect: 'Ignore Darkness Condition. Normal LOS for ranged attacks.' },
+            'Tool Harness': { effect: 'Gain +3 Utility Slots.' },
+            'Hardened Suit System': { effect: 'Ignore Flashbangs. +1 DD vs all Stun rolls.' },
+            'Filter System': { effect: 'Ignore Toxic Fumes hazards.' }
         };
 
         const WEAPON_MODS = {
             'None': { effect: '' },
-            'Laser Designator': { effect: '+1 to Ranged attacks.' },
-            'Mag-Sheath': { effect: '+1 Utility Slot (Frees capacity).' },
-            'Overcharge Port': { effect: '+1 Damage. Natural 1 on attack damages user.' },
-            'Smart Grip': { effect: '+1 to Melee or Ranged attacks.' },
-            'Custom Foregrip': { effect: 'Reroll 1s on attack.' },
-            'Bayonet Lug': { effect: '+1 Utility Slot (Frees capacity).' }
+            'Laser Designator': { effect: 'Ranged weapon. Lock in round destination. +1 to hit.' },
+            'Mag-Sheath': { effect: 'Melee weapon. Holds melee weapon. +1 U-Slot. Cannot be used on Power Shears.' },
+            'Overcharge Port': { effect: 'Ranged weapon. Spend a Power Cell to gain +4 damage (–4 target DD) for a single attack.' },
+            'Smart Grip': { effect: 'Melee weapon. Better control when striking. +1 to hit.' },
+            'Custom Foregrip': { effect: 'Ranged weapon. If stationary prior to ranged attack action, +1 to hit and +1 damage.' },
+            'Bayonet Lug': { effect: 'Ranged weapon. Attach Vibro-Knife. Gain +1 melee damage (–1 target DD), fulfill melee weapon slot, and +1 U-Slot.' }
         };
 
         const U_ITEMS = {
             'Empty': { effect: 'No item equipped.' },
-            'Med-Kit': { effect: 'Heal one Wound or clear one Stress.' },
+            'Med-Kit': { effect: 'Heal one Wound.' },
             'Patch-Kit': { effect: 'Repair one Suit Breach.' },
             'Override Chip': { effect: 'Automatically open a fused panel. Bypasses Scan/Hack.' },
             'Chem-Lights': { effect: 'Remove Darkness in one section for one turn.' },
             'Seal Foam': { effect: 'Repair Hull Breach in a Damaged section.' },
             'Det-Cord': { effect: 'Automatically open a stuck door or hatch. Bypasses Break/Brace.' },
             'Tether Line': { effect: 'Safe Zero-G movement for one Scrapjack for one turn.' },
-            'C-Dose': { effect: 'Restore a used Load or Focus die, or grant Two-Dice Bonus if unused. Side Effect: No Free Move next turn.' },
-            'Dazzler (Grenade)': { effect: 'Ranged attack. Organic hostiles roll DD at -4. LBT. Fail = Stunned.' },
-            'EMP (Grenade)': { effect: 'Robotic hostiles roll DD at -4. LBT. Fail = Wound.' },
+            'C-Dose': { effect: 'Restore a used Load or Focus die, or grant Two-Dice Bonus if that die type is unused. Side Effect: No Free Move next turn.' },
+            'Dazzler (Grenade)': { effect: 'Ranged attack. Organic hostiles roll DD at –4. Large Blast Template. (LBT) Fail = Stunned.' },
+            'EMP (Grenade)': { effect: 'Robotic hostiles roll DD at –4. LBT. Fail = Wound.' },
             'Power Cell': { effect: 'Consumable. Powers specific weapon mods or objectives.' }
         };
 
@@ -1207,8 +1207,10 @@
                 
                 // Attack Mods
                 let atkMod = 0;
-                if (wModData.effect.includes('+1 to Melee or Ranged')) atkMod += 1;
-                if (wModData.effect.includes('+1 to Ranged') && weaponType === 'ranged') atkMod += 1;
+                const wEffects = wData?.effects || '';
+
+                if (wModData.effect.includes('+1 to hit')) atkMod += 1;
+                if (wEffects.includes('–1 to Melee attacks') && weaponType === 'melee') atkMod -= 1;
                 if (tData.traits.includes('Low-Profile') && weaponType === 'ranged') atkMod -= 1;
                 
                 if (combatForm.isAiming) atkMod += 2;
@@ -1239,16 +1241,28 @@
                     let damage = 1;
                     
                     const wEffects = wData?.effects || '';
-                    if (wEffects.includes('-1 target DD')) ddMod -= 1;
-                    if (wEffects.includes('-2 target DD')) ddMod -= 2;
-                    if (wEffects.includes('-4 target DD')) ddMod -= 4;
-                    if (wEffects.includes('rolls DD twice')) rollTwice = true;
-                    if (wEffects.includes('Fail=Stun')) damage = 0; 
+                    if (wEffects.includes('–1 to defender’s DD') || wEffects.includes('–1 to target’s DD') || wEffects.includes('-1 Penalty on target’s DD')) ddMod -= 1;
+                    if (wEffects.includes('–2 to defender’s DD')) ddMod -= 2;
+                    if (wEffects.includes('–4 to defender’s DD') || wEffects.includes('–4 to target’s DD')) ddMod -= 4;
+                    if (wEffects.includes('rolls DD twice per attack')) rollTwice = true;
+                    if (wEffects.includes('Fail = target is Stunned')) damage = 0;
                     
                     if (combatForm.isAiming) ddMod -= 2;
                     
                     if (tData.traits.includes('Plated') || tData.traits.includes('Armored')) ddMod += 1;
-                    if (wModData.effect.includes('+1 Damage')) damage += 1;
+
+                    // Shock Baton rule: "Robotic targets suffer –2 to DD"
+                    if (weaponName === 'Shock Baton' && ['Droid', 'Turret', 'C-FRAME', 'Nanite', 'AI'].some(k => target.type?.includes(k))) {
+                        ddMod -= 2;
+                    }
+
+                    if (wModData.effect.includes('+1 damage')) damage += 1;
+                    if (wModData.effect.includes('+1 melee damage') && weaponType === 'melee') damage += 1;
+                    if (wModData.effect.includes('+4 damage')) damage += 4;
+                    if (wModData.effect.includes('–4 target DD') || wModData.effect.includes('–1 target DD')) {
+                        if (wModData.effect.includes('–4 target DD')) ddMod -= 4;
+                        if (wModData.effect.includes('–1 target DD')) ddMod -= 1;
+                    }
                     
                     const dd1 = rollDice(1, defSides);
                     const dd2 = rollTwice ? rollDice(1, defSides) : 99;
@@ -1260,7 +1274,10 @@
                     logMsg += ` -> Total: ${finalDD}. `;
                     
                     if (finalAtk > finalDD) {
-                        if (wEffects.includes('Fail=Stun')) {
+                        if (wEffects.includes('DD Fail = Called Effect')) {
+                            logMsg += ` CALLED EFFECT SUCCESS (No Damage): Choose to Knock Prone or Pull target adjacent.`;
+                            addLog(logMsg);
+                        } else if (wEffects.includes('Fail = target is Stunned')) {
                             logMsg += " Target STUNNED.";
                             addLog(logMsg);
                         } else {
@@ -1269,10 +1286,26 @@
                             updateEnemyCount(target.id, -damage);
                         }
                     } else if (finalAtk === finalDD) {
-                        logMsg += " Target STUNNED.";
-                        addLog(logMsg);
+                        if (wEffects.includes('DD Fail = Called Effect')) {
+                            logMsg += ` CALLED EFFECT SUCCESS (No Damage): Choose to Knock Prone or Pull target adjacent.`;
+                            addLog(logMsg);
+                        } else {
+                            logMsg += " Target STUNNED.";
+                            addLog(logMsg);
+                        }
                     } else {
-                        logMsg += " Enemy defended the attack.";
+                        if (weaponName === 'Shock Baton') {
+                            const secondDD = rollDice(1, defSides);
+                            const finalSecondDD = Math.max(1, secondDD + ddMod);
+                            logMsg += ` Enemy defended the attack. SHOCK BATON SECOND DD ROLL: [${secondDD}] (Mod: ${ddMod>0?'+':''}${ddMod}) -> Total: ${finalSecondDD}. `;
+                            if (finalAtk > finalSecondDD || finalAtk === finalSecondDD) {
+                                logMsg += " Target STUNNED by Shock Baton.";
+                            } else {
+                                logMsg += " Target defended the Shock Baton.";
+                            }
+                        } else {
+                            logMsg += " Enemy defended the attack.";
+                        }
                         addLog(logMsg);
                     }
                 }
@@ -1371,10 +1404,13 @@
                     if (target.live.stunned) ddMod -= 2;
                     if (hostileAttackPrompt.isProne) ddMod -= 2;
 
-                    if (wEffects.includes('-1 target DD')) ddMod -= 1;
-                    if (wEffects.includes('-2 target DD')) ddMod -= 2;
-                    if (wEffects.includes('-4 target DD')) ddMod -= 4;
-                    if (wEffects.includes('rolls DD twice')) rollTwice = true;
+                    if (wEffects.includes('–1 to defender’s DD') || wEffects.includes('–1 to target’s DD') || wEffects.includes('-1 Penalty on target’s DD')) ddMod -= 1;
+                    if (wEffects.includes('–2 to defender’s DD')) ddMod -= 2;
+                    if (wEffects.includes('–4 to defender’s DD') || wEffects.includes('–4 to target’s DD')) ddMod -= 4;
+                    if (wEffects.includes('rolls DD twice per attack')) rollTwice = true;
+
+                    const targetMeleeEffects = WEAPONS_MELEE[target.melee]?.effects || '';
+                    if (targetMeleeEffects.includes('+1 to user’s DD')) ddMod += 1;
 
                     // Last Lung check
                     const isHalfAir = aircharge <= (SHIPS[shipClass].aircharge / 2);
@@ -1384,6 +1420,10 @@
 
                     // Armor mods
                     if (target.evaMods.includes('Carbon Fiber Plates')) ddMod += 1;
+
+                    if (wEffects.includes('Fail = target is Stunned') && target.evaMods.includes('Hardened Suit System')) {
+                        ddMod += 1;
+                    }
 
                     const dd1 = rollDice(1, ddSides);
                     const dd2 = rollTwice ? rollDice(1, ddSides) : 99;
@@ -1400,15 +1440,17 @@
                         if (eData.traits.includes('System Shock')) {
                             logMsg += ` SYSTEM SHOCK: ${target.name} takes ${hostileDamage} Wound(s) (Infestation)!`;
                             handleWoundChange(target, Math.min(4, target.wounds + hostileDamage));
-                        } else if (wEffects.includes('Fail=Stun')) {
+                        } else if (wEffects.includes('Fail = target is Stunned')) {
                             logMsg += ` STUNNED: ${target.name} takes a severe shock!`;
                             updateLiveState(target.id, 'stunned', true);
+                        } else if (wEffects.includes('DD Fail = Called Effect')) {
+                            logMsg += ` CALLED EFFECT SUCCESS: Hostile can Knock Prone or Pull target adjacent.`;
                         } else {
                             logMsg += ` INJURY: ${target.name} takes ${hostileDamage} Wound(s)!`;
                             handleWoundChange(target, Math.min(4, target.wounds + hostileDamage));
                         }
                         
-                        if (wEffects.includes('Breach')) {
+                        if (wEffects.includes('Wound causes Suit Breach')) {
                             logMsg += ` SUIT BREACH: ${target.name}'s suit integrity compromised!`;
                             updateCharacter(target.id, 'suitBreaches', target.suitBreaches + 1);
                         }
@@ -1417,7 +1459,19 @@
                             logMsg += ` PINNED: Forced Prone.`;
                         }
                     } else {
-                        logMsg += " DEFENDED.";
+                        if (weaponName === 'Shock Baton') {
+                            const secondDD = rollDice(1, ddSides);
+                            const finalSecondDD = Math.max(1, secondDD + ddMod);
+                            logMsg += ` DEFENDED. SHOCK BATON SECOND DD ROLL: [${secondDD}] (Mod: ${ddMod>0?'+':''}${ddMod}) -> Total: ${finalSecondDD}. `;
+                            if (finalSecondDD < 4) {
+                                logMsg += ` STUNNED: ${target.name} takes a severe shock!`;
+                                updateLiveState(target.id, 'stunned', true);
+                            } else {
+                                logMsg += " DEFENDED the Shock Baton.";
+                            }
+                        } else {
+                            logMsg += " DEFENDED.";
+                        }
                     }
                     
                     addLog(logMsg);
