@@ -5056,7 +5056,7 @@
                                                     <h4 className="text-lg font-bold text-white mb-2 border-b border-slate-700 pb-1">Turn Structure</h4>
                                                     <ol className="list-decimal list-inside space-y-2 marker:text-amber-500">
                                                         <li><strong>Breach (Start of each MHU):</strong> Roll Entry Hazard. Establish baseline conditions for the MHU.</li>
-                                                        <li><strong>Sweep:</strong> The main action phase. Scrapjacks take turns acting. 1 Free Move + 1 Action Die per turn. Pushing costs 1 Aircharge to regain an action.</li>
+                                                        <li><strong>Sweep:</strong> The main action phase. Scrapjacks take turns acting. 1 Free Move + 1 Action Die per turn. Pushing: when a character has exhausted all Action Dice, they may choose to Push. Pushing costs -1 Aircharge. The player selects an Action Die and rolls: on a 4+, they regain all Action Dice and their Free Move. On a failure, the action is lost.</li>
                                                         <li><strong>Hitch:</strong> When all Scrapjacks have acted, roll the Hitch Die (d10). Events scale from cosmetic hazards to deadly hostile spawns.</li>
                                                         <li><strong>Call:</strong> Decide to continue to next MHU or Extract. (Only allowed if no hostiles are present).</li>
                                                     </ol>
@@ -5064,13 +5064,13 @@
 
                                                 <section>
                                                     <h4 className="text-lg font-bold text-white mb-2 border-b border-slate-700 pb-1">Combat Resolution</h4>
-                                                    <p className="mb-2"><strong>Attacker:</strong> Roll assigned Action Die (typically Grit for Melee, Focus for Ranged).</p>
+                                                    <p className="mb-2"><strong>Attacker:</strong> Roll assigned Action Die (typically Load for Melee, Focus for Ranged).</p>
                                                     <p className="mb-2"><strong>Defender (DD):</strong> Target rolls d6. Target Number is (Attacker Roll + Weapon Modifiers).</p>
                                                     <ul className="list-disc list-inside space-y-1 ml-4 mb-2">
                                                         <li>If DD Roll &ge; TN: Attack Misses / is Defended.</li>
                                                         <li>If DD Roll &lt; TN: Attack Hits. Apply Wound (and potential Suit Breach/Stun).</li>
                                                     </ul>
-                                                    <p className="italic text-xs text-amber-400">Modifiers: Cover grants +2 DD. Aiming grants +2 to Attacker Roll. Pushing an attack costs 1 Aircharge but allows rerolling the Action Die.</p>
+                                                    <p className="italic text-xs text-amber-400">Modifiers: Cover grants +2 DD. Aiming grants +2 to Attacker Roll.</p>
                                                 </section>
 
                                                 <section>
