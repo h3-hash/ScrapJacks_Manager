@@ -608,6 +608,7 @@
             const [hitchSkips, setHitchSkips] = useState(0);
             const [nextMhuHazardClear, setNextMhuHazardClear] = useState(false);
             const [nextMhuHitchMinus1, setNextMhuHitchMinus1] = useState(false);
+            const [nextMhuHitchPlus1, setNextMhuHitchPlus1] = useState(false);
             const [nextMhuHitchHullShift, setNextMhuHitchHullShift] = useState(false);
             const [nextMhuHitchPrime, setNextMhuHitchPrime] = useState(false);
             const [crewBuffs, setCrewBuffs] = useState([]);
@@ -624,7 +625,7 @@
                     shipClass, salvage, acrDebt, aircharge, crewName, crew, legacyLocker,
                     jobCount, campaignLog, traces, shipUpgrades, activeContract, cleanExitGoal,
                     turn, phase, playLog, missionLevel, activeObjectives, activeQuietPull,
-                    pressureBuilding, hitchSkips, nextMhuHazardClear, nextMhuHitchMinus1, nextMhuHitchHullShift, nextMhuHitchPrime, crewBuffs,
+                    pressureBuilding, hitchSkips, nextMhuHazardClear, nextMhuHitchMinus1, nextMhuHitchPlus1, nextMhuHitchHullShift, nextMhuHitchPrime, crewBuffs,
                     activeEnemies, activeHazards, charRollInputs, manualRolls, pendingChoices
                 };
                 const jsonString = JSON.stringify(dataToSave, null, 2);
@@ -679,6 +680,7 @@
                         if(data.hitchSkips !== undefined) setHitchSkips(data.hitchSkips);
                         if(data.nextMhuHazardClear !== undefined) setNextMhuHazardClear(data.nextMhuHazardClear);
                         if(data.nextMhuHitchMinus1 !== undefined) setNextMhuHitchMinus1(data.nextMhuHitchMinus1);
+                        if(data.nextMhuHitchPlus1 !== undefined) setNextMhuHitchPlus1(data.nextMhuHitchPlus1);
                         if(data.nextMhuHitchHullShift !== undefined) setNextMhuHitchHullShift(data.nextMhuHitchHullShift);
                         if(data.nextMhuHitchPrime !== undefined) setNextMhuHitchPrime(data.nextMhuHitchPrime);
                         if(data.crewBuffs) setCrewBuffs(data.crewBuffs);
@@ -1653,6 +1655,7 @@
                     hitchSkips,
                     nextMhuHazardClear,
                     nextMhuHitchMinus1,
+                    nextMhuHitchPlus1,
                     nextMhuHitchHullShift,
                     nextMhuHitchPrime,
                     crewBuffs: [...crewBuffs],
@@ -1832,7 +1835,7 @@
                     // Interactive POI Payouts
                     if (obj.type === 'poi_L1_1') {
                         const r = rollDice(1,6);
-                        if (r >= 6) sAdd = rollDice(2,4); else if (r >= 4) sAdd = rollDice(1,4);
+                        if (r === 6) sAdd = rollDice(2,4); else if (r >= 4) sAdd = rollDice(1,4);
                         special = sAdd > 0 ? "Salvage Found in Lockers." : "Lockers Empty.";
                     } else if (obj.type === 'poi_L1_2') {
                         gear.push('Utility Choice', 'Utility Choice'); aAdd += 1; sAdd = rollDice(1,4);
@@ -1841,7 +1844,7 @@
                     } else if (obj.type === 'poi_L1_4') {
                         gear.push('Med-Kit', 'Patch-Kit'); aAdd += 1;
                     } else if (obj.type === 'poi_L1_5') {
-                        gear.push('PitBull', getRandomItem('wepMod'));
+                        gear.push('PitBull (Large)', getRandomItem('wepMod'));
                     } else if (obj.type === 'poi_L1_6') {
                         gear.push('Power Cell', 'Utility Choice', 'Utility Choice'); sAdd = rollDice(1,4);
                     } else if (obj.type === 'poi_L1_7') {
@@ -1897,7 +1900,7 @@
                         setLegacyLocker(prev => [...prev, ...gear.map(g => ({ name: g, type: (g.includes('Suit') || g.includes('Choice') || g.includes('OR')) ? 'special' : 'uItem', id: generateId() }))]);
                     }
 
-                    let logMsg = `${isObj ? 'Objective Completed' : 'POI Resolved'} by ${actorStr}: ${obj.text.split('(')[0].trim()}. `;
+                    let logMsg = `${isObj ? 'Objective Completed' : 'POI Resolved'} by ${actorStr}: ${obj.text.split('.')[0].trim()}. `;
                     let rewards = [];
                     if (sAdd > 0) rewards.push(`+${sAdd} Salvage`);
                     if (aAdd > 0) rewards.push(`+${aAdd} Aircharge`);
@@ -1934,7 +1937,7 @@
                     } else if (obj.type === 'poi_L2_4' || obj.type === 'poi_L3_2') {
                         setAircharge(a => Math.max(0, a-1)); consequence = "-1 Aircharge.";
                     } else if (obj.type === 'poi_L2_5') {
-                        setNextMhuHitchMinus1(true); consequence = "Alarm Triggered (+1 to next Hitch roll).";
+                        setNextMhuHitchPlus1(true); consequence = "Alarm Triggered (+1 to next Hitch roll).";
                     } else if (obj.type === 'poi_L2_7') {
                         consequence = "Actor loses 1 carried Utility Item (Manually remove from roster).";
                     } else if (obj.type === 'poi_L2_8') {
@@ -1942,16 +1945,16 @@
                     } else if (obj.type === 'poi_L3_3') {
                         setPendingPenaltyPrompt({ type: 'wound', amount: 1, reason: 'Failed Primary Power Core (Shock Risk)' }); consequence = "Pending Wound selection.";
                     } else if (obj.type === 'poi_L3_4') {
-                        setNextMhuHitchHullShift(true); consequence = "Next Hitch will automatically result in Hull Shift.";
+                        setNextMhuHitchHullShift(true); consequence = "Next Hitch Phase automatically results in Hull Shift.";
                     } else if (obj.type === 'poi_L3_5') {
-                        setNextMhuHitchPrime(true); consequence = "Next Hitch rerolled to Hostile w/ Prime.";
+                        setNextMhuHitchPrime(true); consequence = "Next Hitch reroll until Hostile generated, includes Prime.";
                     } else if (obj.type === 'poi_L3_7') {
                         updateLiveState(actor.id, 'usedGrit', true); consequence = `${actor.name} loses their Grit die for their next activation.`;
                     } else if (obj.type === 'poi_L3_8') {
-                        rollHitch(manualRolls.hitch); consequence = "Immediate Hitch rolled.";
+                        rollHitch(manualRolls.hitch); consequence = "Immediate Hitch roll.";
                     }
 
-                    addLog(`${isObj ? 'Objective' : 'POI'} FAILED by ${actorStr}: ${obj.text.split('(')[0].trim()}. ${consequence}`);
+                    addLog(`${isObj ? 'Objective' : 'POI'} FAILED by ${actorStr}: ${obj.text.split('.')[0].trim()}. ${consequence}`);
                 }
                 
                 setObjectivePrompt(null);
@@ -1998,32 +2001,32 @@
                 let logMsg = `${actorPrefix}Identified POI (Level ${missionLevel}) [${manualRollStr ? 'Manual Roll' : 'Roll'}: ${roll}]: `;
                 
                 if (missionLevel === 1) {
-                    if (roll === 1) poiObj = { text: 'Sealed Locker Bank (Access: Break/Brace)', type: 'poi_L1_1' };
-                    if (roll === 2) poiObj = { text: 'Supply Crate (Access: Break/Brace)', type: 'poi_L1_2' };
-                    if (roll === 3) poiObj = { text: 'Power Relay Cabinet (Access: Scan/Hack)', type: 'poi_L1_3' };
-                    if (roll === 4) poiObj = { text: 'Emergency Aid Cabinet (Access: Break/Brace)', type: 'poi_L1_4' };
-                    if (roll === 5) poiObj = { text: 'Security Locker (Access: Scan/Hack)', type: 'poi_L1_5' };
-                    if (roll === 6) poiObj = { text: 'Maintenance Supply Cabinet (Access: Break/Brace)', type: 'poi_L1_6' };
-                    if (roll === 7) poiObj = { text: 'Data Node (Access: Scan/Hack)', type: 'poi_L1_7' };
-                    if (roll === 8) poiObj = { text: 'Support System Terminal (Access: Break/Brace)', type: 'poi_L1_8' };
+                    if (roll === 1) poiObj = { text: 'Sealed Locker Bank. Rusted personal lockers lining the wall. (Access: Break/Brace)', type: 'poi_L1_1' };
+                    if (roll === 2) poiObj = { text: 'Supply Crate (Strapped Down). Heavy-duty cargo box chained to deck. (Access: Break/Brace)', type: 'poi_L1_2' };
+                    if (roll === 3) poiObj = { text: 'Power Relay Cabinet. Sparking cables, still humming faintly. (Access: Scan/Hack)', type: 'poi_L1_3' };
+                    if (roll === 4) poiObj = { text: 'Emergency Aid Cabinet. Half-buried beneath fallen ductwork. (Access: Break/Brace)', type: 'poi_L1_4' };
+                    if (roll === 5) poiObj = { text: 'Security Locker. Access plate stenciled “SECURITY.” E-Lock blinking red. (Access: Scan/Hack)', type: 'poi_L1_5' };
+                    if (roll === 6) poiObj = { text: 'Maintenance Supply Cabinet. Small access panel with E-Lock. Marked “TOOLS AND PARTS.” (Access: Break/Brace)', type: 'poi_L1_6' };
+                    if (roll === 7) poiObj = { text: 'Data Node. Hidden cache log—coordinates to unlisted cargo. (Access: Scan/Hack)', type: 'poi_L1_7' };
+                    if (roll === 8) poiObj = { text: 'Support System Terminal. Cover panel crumpled and jammed shut. (Access: Break/Brace)', type: 'poi_L1_8' };
                 } else if (missionLevel === 2) {
-                    if (roll === 1) poiObj = { text: 'Collapsed Locker Run (Access: Break/Brace)', type: 'poi_L2_1' };
-                    if (roll === 2) poiObj = { text: 'Reinforced Supply Crate (Access: Break/Brace)', type: 'poi_L2_2' };
-                    if (roll === 3) poiObj = { text: 'Auxiliary Power Junction (Access: Scan/Hack)', type: 'poi_L2_3' };
-                    if (roll === 4) poiObj = { text: 'Emergency Medical Cache (Access: Break/Brace)', type: 'poi_L2_4' };
-                    if (roll === 5) poiObj = { text: 'Security Equipment Locker (Access: Scan/Hack)', type: 'poi_L2_5' };
-                    if (roll === 6) poiObj = { text: 'Maintenance Spares Cabinet (Access: Break/Brace OR Scan/Hack)', type: 'poi_L2_6' };
-                    if (roll === 7) poiObj = { text: 'Encrypted Data Node (Access: Scan/Hack)', type: 'poi_L2_7' };
-                    if (roll === 8) poiObj = { text: 'Life Support Control Console (Access: Break/Brace)', type: 'poi_L2_8' };
+                    if (roll === 1) poiObj = { text: 'Collapsed Locker Run. Crushed personal lockers fused by hull deformation. (Access: Break/Brace)', type: 'poi_L2_1' };
+                    if (roll === 2) poiObj = { text: 'Reinforced Supply Crate. Cargo crate secured with physical clamps and a deadlock collar. (Access: Break/Brace)', type: 'poi_L2_2' };
+                    if (roll === 3) poiObj = { text: 'Auxiliary Power Junction. Active subsystem bleeding residual current. (Access: Scan/Hack)', type: 'poi_L2_3' };
+                    if (roll === 4) poiObj = { text: 'Emergency Medical Cache. Wall unit pinned under twisted struts. (Access: Break/Brace)', type: 'poi_L2_4' };
+                    if (roll === 5) poiObj = { text: 'Security Equipment Locker. Lockdown housing with live sensor loop. (Access: Scan/Hack)', type: 'poi_L2_5' };
+                    if (roll === 6) poiObj = { text: 'Maintenance Spares Cabinet. Heavy panel with redundant locking pins. (Access: Break/Brace or Scan/Hack)', type: 'poi_L2_6' };
+                    if (roll === 7) poiObj = { text: 'Encrypted Data Node. Black-box memory core behind a scorched terminal. (Access: Scan/Hack)', type: 'poi_L2_7' };
+                    if (roll === 8) poiObj = { text: 'Life Support Control Console. Buckled control panel still tied into the section. (Access: Break/Brace)', type: 'poi_L2_8' };
                 } else if (missionLevel === 3) {
-                    if (roll === 1) poiObj = { text: 'Fused Locker Vault (Access: Scan/Hack AND Break/Brace)', type: 'poi_L3_1' };
-                    if (roll === 2) poiObj = { text: 'Hazard-Sealed Supply Pod (Access: Scan/Hack THEN Break/Brace)', type: 'poi_L3_2' };
-                    if (roll === 3) poiObj = { text: 'Primary Power Core Access (Access: Scan/Hack)', type: 'poi_L3_3' };
-                    if (roll === 4) poiObj = { text: 'Trauma Response Cache (Access: Break/Brace)', type: 'poi_L3_4' };
-                    if (roll === 5) poiObj = { text: 'Armory Lockframe (Access: Scan/Hack AND Break/Brace)', type: 'poi_L3_5' };
-                    if (roll === 6) poiObj = { text: 'Fabrication Materials Locker (Access: Break/Brace OR Scan/Hack)', type: 'poi_L3_6' };
-                    if (roll === 7) poiObj = { text: 'Deep Memory Archive (Access: Scan/Hack)', type: 'poi_L3_7' };
-                    if (roll === 8) poiObj = { text: 'Environmental Control Nexus (Access: Break/Brace)', type: 'poi_L3_8' };
+                    if (roll === 1) poiObj = { text: 'Fused Locker Vault. Lockers welded shut by heat and pressure. (Access: Scan/Hack and Break/Brace)', type: 'poi_L3_1' };
+                    if (roll === 2) poiObj = { text: 'Hazard-Sealed Supply Pod. Armored crate with biometric clamp and power interlock. (Access: Scan/Hack → Break/Brace)', type: 'poi_L3_2' };
+                    if (roll === 3) poiObj = { text: 'Primary Power Core Access. Live conduit cluster feeding multiple systems. (Access: Scan/Hack)', type: 'poi_L3_3' };
+                    if (roll === 4) poiObj = { text: 'Trauma Response Cache. Emergency station crushed into the deck. (Access: Break/Brace)', type: 'poi_L3_4' };
+                    if (roll === 5) poiObj = { text: 'Armory Lockframe. Military-grade security housing. (Access: Scan/Hack and Break/Brace)', type: 'poi_L3_5' };
+                    if (roll === 6) poiObj = { text: 'Fabrication Materials Locker. Dense components fused into storage rails. (Access: Break/Brace or Scan/Hack)', type: 'poi_L3_6' };
+                    if (roll === 7) poiObj = { text: 'Deep Memory Archive. Fragmented AI core behind corrupted logic gates. (Access: Scan/Hack)', type: 'poi_L3_7' };
+                    if (roll === 8) poiObj = { text: 'Environmental Control Nexus. Section-wide systems hub under heavy damage. (Access: Break/Brace)', type: 'poi_L3_8' };
                 }
 
                 if (poiObj) {
@@ -2167,6 +2170,10 @@
                     roll = Math.max(1, roll - 1);
                     logPrefix = `Hitch (Level ${missionLevel}) [${manualRollStr ? 'Manual Roll' : 'Roll'}: ${roll} (-1 Objective Buff applied)]: `;
                     setNextMhuHitchMinus1(false);
+                } else if (nextMhuHitchPlus1) {
+                    roll = Math.min(10, roll + 1);
+                    logPrefix = `Hitch (Level ${missionLevel}) [${manualRollStr ? 'Manual Roll' : 'Roll'}: ${roll} (+1 Alarm Penalty applied)]: `;
+                    setNextMhuHitchPlus1(false);
                 } else if (nextMhuHitchHullShift) {
                     logPrefix = `Hitch (Level ${missionLevel}) [Forced Consequence]: `;
                     setNextMhuHitchHullShift(false);
@@ -2289,6 +2296,7 @@
                 setHitchSkips(turnHistory.hitchSkips || 0);
                 setNextMhuHazardClear(turnHistory.nextMhuHazardClear || false);
                 setNextMhuHitchMinus1(turnHistory.nextMhuHitchMinus1 || false);
+                setNextMhuHitchPlus1(turnHistory.nextMhuHitchPlus1 || false);
                 setNextMhuHitchHullShift(turnHistory.nextMhuHitchHullShift || false);
                 setNextMhuHitchPrime(turnHistory.nextMhuHitchPrime || false);
                 setCrewBuffs(turnHistory.crewBuffs || []);
