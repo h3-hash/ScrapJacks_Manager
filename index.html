@@ -76,6 +76,22 @@
             'Void Suit': { dur: 'D6+1', move: 6, uSlots: 3, mods: 2, special: '+2 to all Resist rolls (Entry Conditions, Hazards, Redline effects). Ultra-rare and tightly controlled.' }
         };
 
+
+        const ACTION_TYPES = {
+            'Aim': { type: 'Any', desc: '+2 to next Combat action, -2 to enemy DD.' },
+            'Assist': { type: 'Any', desc: 'Grants ally TDB or +2 to their next action.' },
+            'Interact/Use': { type: 'Any', desc: 'Use items, open doors, minor interactions.' },
+            'Move': { type: 'Load', desc: 'Additional movement after Free Move.' },
+            'Melee Combat': { type: 'Load', desc: 'Close-quarters fighting.' },
+            'Break/Brace': { type: 'Load', desc: 'Forceful dismantling or stabilizing.' },
+            'Ranged Combat': { type: 'Focus', desc: 'Attacking with firearms.' },
+            'Repair/Heal': { type: 'Focus', desc: 'Treat injuries, patch suits.' },
+            'Scan/Hack': { type: 'Focus', desc: 'Technical interaction with systems.' },
+            'Resist': { type: 'Grit', desc: 'Reaction. Die spent only on failure.' },
+            'Resist Stress': { type: 'Grit', desc: 'Save vs Terror or Redlined.' },
+            'Push': { type: 'Grit', desc: 'Costs 1 Aircharge. Success = refresh dice & move.' }
+        };
+
         const WEAPONS_MELEE = {
             'Wrecking Bar': { uSlots: 0, effects: 'Hit up to two adjacent hostiles in melee. +1 to Break/Brace.' },
             'Pulaski Axe': { uSlots: 0, effects: '–2 to defender’s DD. +1 to Break/Brace. Wound causes Suit Breach.' },
@@ -578,6 +594,7 @@
             const [cleanExitGoal, setCleanExitGoal] = useState(500);
 
             const [modalConfig, setModalConfig] = useState(null);
+            const [actionRollPrompt, setActionRollPrompt] = useState(null);
             const [pendingPenaltyPrompt, setPendingPenaltyPrompt] = useState(null); 
             const [redlinePrompt, setRedlinePrompt] = useState(null); 
             const [shipChangePrompt, setShipChangePrompt] = useState(null);
@@ -793,7 +810,7 @@
                     setCrewLocker(items);
                     if (buff) setCrewBuffs(prev => [...prev, buff]);
                 } else {
-                    addCampaignLog(`Acquired ${newShip}. Ship upgrades reset.`);
+                    addCampaignLog(`Acquired ${newShip}. Ship upgrades persist.`);
                 }
 
                 setShipClass(newShip);
@@ -811,7 +828,7 @@
                 setNextMhuHitchMinus1(false);
                 setNextMhuHitchHullShift(false);
                 setNextMhuHitchPrime(false);
-                setShipUpgrades([]); 
+                // // setShipUpgrades([]); // User request: Upgrades persist
                 setManualRolls(p => ({...p, legacy: ''}));
                 setPendingChoices([]);
                 
@@ -1028,19 +1045,101 @@
                 addLog(`[RANDOM WOUND]: ${randomChar.name} suffered ${amount} Wound(s) from ${reason}.`);
             };
 
-            const handleStandardRoll = (charId, vital) => {
-                saveHistory();
+            const triggerActionRoll = (charId, vital) => {
+                setActionRollPrompt({ charId, vital });
+            };
+
+            const confirmActionRoll = (charId, vital, actionName) => {
                 const char = crew.find(c => c.id === charId);
+                if (actionName === 'Melee Combat') {
+                    setCombatPrompt({ charId, weaponType: 'melee' });
+                    setActionRollPrompt(null);
+                    return;
+                }
+                if (actionName === 'Ranged Combat') {
+                    setCombatPrompt({ charId, weaponType: 'ranged' });
+                    setActionRollPrompt(null);
+                    return;
+                }
+                if (actionName === 'Push') {
+                    handlePush(charId);
+                    setActionRollPrompt(null);
+                    return;
+                }
+
+                saveHistory();
                 const sides = parseInt(char.vitals[vital].substring(1));
                 const manualVal = charRollInputs[charId];
                 
-                const roll = manualVal ? parseInt(manualVal) : rollDice(1, sides);
-                const success = roll >= 4;
+                let roll1 = manualVal ? parseInt(manualVal) : rollDice(1, sides);
+                let roll2 = null;
+                let isTdb = false;
                 
-                updateLiveState(charId, `used${vital.charAt(0).toUpperCase() + vital.slice(1)}`, true);
-                updateCharRollInput(charId, ''); 
+                // Determine if they get TDB based on their Role
+                const roleTdbText = ROLES[char.role]?.tdb || '';
+                if (roleTdbText.includes(actionName) || (actionName === 'Push' && roleTdbText.includes('Push'))) {
+                    isTdb = true;
+                }
+
+                let finalRoll = roll1;
+                let logText = manualVal ? `[Manual: ${roll1}]` : `Rolled ${roll1}`;
+
+                if (isTdb && !manualVal) {
+                    roll2 = rollDice(1, sides);
+                    finalRoll = Math.max(roll1, roll2);
+                    logText = `[TDB: ${roll1}, ${roll2} -> ${finalRoll}]`;
+                }
+
+                const success = finalRoll >= 4;
+                let isCritSuccess = false;
+                let isCritFumble = false;
+                let logMsg = `[ACTION: ${actionName}] ${char.name} rolled ${vital.toUpperCase()} (${char.vitals[vital]}): ${logText} -> ${success ? 'SUCCESS' : 'FAILED'}.`;
+
+                if (isTdb && roll2 !== null && roll1 === roll2) {
+                    if (success) {
+                        isCritSuccess = true;
+                        logMsg += ` CRITICAL SUCCESS! Die is NOT expended.`;
+                    } else {
+                        isCritFumble = true;
+                        logMsg += ` CRITICAL FUMBLE! Activation ends immediately. -1 Aircharge.`;
+                        setAircharge(prev => Math.max(0, prev - 1));
+                    }
+                }
+
+                if (!isCritSuccess) {
+                    // Expend the die unless it's a Grit action that passed
+                    if (vital === 'grit' && actionName.includes('Resist') && success) {
+                        logMsg += ` (Grit die retained on success).`;
+                    } else if (actionName === 'Push') {
+                        // Push is handled separately or we log it here
+                        logMsg += ` (Push costs 1 AC regardless).`;
+                        setAircharge(prev => Math.max(0, prev - 1));
+                        updateLiveState(charId, `used${vital.charAt(0).toUpperCase() + vital.slice(1)}`, true);
+                    } else {
+                        updateLiveState(charId, `used${vital.charAt(0).toUpperCase() + vital.slice(1)}`, true);
+                    }
+                }
+
+                if (isCritFumble) {
+                    // End activation = spend all dice (or just mark them pushed/done)
+                    updateLiveState(charId, 'usedMove', true);
+                    updateLiveState(charId, 'usedLoad', true);
+                    updateLiveState(charId, 'usedFocus', true);
+                    updateLiveState(charId, 'usedGrit', true);
+                }
+
+                if (actionName === 'Push' && success && !isCritFumble) {
+                    updateLiveState(charId, 'usedMove', false);
+                    updateLiveState(charId, 'usedLoad', false);
+                    updateLiveState(charId, 'usedFocus', false);
+                    updateLiveState(charId, 'usedGrit', false);
+                    updateLiveState(charId, 'pushed', true);
+                    logMsg += ` Regained Free Move and Full Action Dice Pool.`;
+                }
                 
-                addLog(`[ACTION] ${char.name} rolled ${vital.toUpperCase()} (${char.vitals[vital]}): ${manualVal ? `[Manual: ${roll}]` : `Rolled ${roll}`} -> ${success ? 'SUCCESS' : 'FAILED'}.`);
+                updateCharRollInput(charId, '');
+                addLog(logMsg);
+                setActionRollPrompt(null);
             };
             
             const resolveStun = (charId) => {
@@ -1576,11 +1675,15 @@
                 let finalRoll = roll1;
                 let logText = parsedVal !== null ? `[Manual Grit: ${roll1}]` : `[Grit: ${roll1}]`;
 
+                let roll2 = null;
                 if (isYarddog && parsedVal === null) {
-                    let roll2 = rollDice(1, sides);
+                    roll2 = rollDice(1, sides);
                     finalRoll = Math.max(roll1, roll2);
                     logText = `[Grit (TDB): ${roll1}, ${roll2} -> ${finalRoll}]`;
                 }
+
+                let isCritSuccess = (isYarddog && roll2 !== null && roll1 === roll2 && finalRoll >= 4);
+                let isCritFumble = (isYarddog && roll2 !== null && roll1 === roll2 && finalRoll < 4);
 
                 updateCharRollInput(char.id, '');
 
@@ -1591,15 +1694,22 @@
                         }
                         return c;
                     }));
-                    addLog(`Push Action: ${char.name} SUCCESS (-1 AC) ${logText}. Regained Free Move and Full Action Dice Pool.`);
+                    let msg = `Push Action: ${char.name} SUCCESS (-1 AC) ${logText}. Regained Free Move and Full Action Dice Pool.`;
+                    if (isCritSuccess) msg += " CRITICAL SUCCESS! Grit die remains active (not applicable to Push refresh).";
+                    addLog(msg);
                 } else {
+                    let msg = `Push Action: ${char.name} FAILED (-1 AC) ${logText}. Action lost.`;
+                    if (isCritFumble) {
+                        msg += " CRITICAL FUMBLE! Activation ends immediately. -1 additional Aircharge.";
+                        setAircharge(prev => Math.max(0, prev - 1));
+                    }
                     setCrew(prev => prev.map(c => {
                         if (c.id === char.id) {
-                            return { ...c, live: { ...c.live, pushed: true } };
+                            return { ...c, live: { ...c.live, pushed: true, usedMove: isCritFumble ? true : c.live.usedMove, usedLoad: isCritFumble ? true : c.live.usedLoad, usedFocus: isCritFumble ? true : c.live.usedFocus, usedGrit: isCritFumble ? true : c.live.usedGrit } };
                         }
                         return c;
                     }));
-                    addLog(`Push Action: ${char.name} FAILED (-1 AC) ${logText}. Action lost.`);
+                    addLog(msg);
                 }
             };
 
@@ -2436,7 +2546,7 @@
                 setJobCount(1);
                 setCampaignLog([]);
                 setTraces(0);
-                setShipUpgrades([]);
+                // setShipUpgrades([]);
                 setActiveContract(null);
                 setCleanExitGoal(500);
                 setTurn(1);
@@ -2725,6 +2835,52 @@
                         return null;
                     })()}
 
+
+                    {actionRollPrompt && (() => {
+                        const char = crew.find(c => c.id === actionRollPrompt.charId);
+                        const vital = actionRollPrompt.vital;
+
+                        // Filter actions based on the selected die
+                        const availableActions = Object.entries(ACTION_TYPES).filter(([name, data]) => {
+                            return data.type === 'Any' || data.type.toLowerCase() === vital;
+                        });
+
+                        return (
+                            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 no-print">
+                                <div className="bg-slate-800 border border-slate-600 p-6 rounded-lg shadow-xl max-w-sm w-full">
+                                    <h3 className="text-xl font-bold text-white mb-2">Select Action</h3>
+                                    <p className="text-slate-300 mb-4 text-sm">
+                                        {char.name} is spending their <span className="font-bold uppercase text-amber-500">{vital}</span> die. What action are they taking?
+                                    </p>
+
+                                    <div className="flex flex-col gap-2 max-h-[60vh] overflow-y-auto mb-4 pr-1 custom-scrollbar">
+                                        {availableActions.map(([name, data]) => {
+                                            // Check if this action triggers TDB for this character
+                                            const roleTdbText = ROLES[char.role]?.tdb || '';
+                                            const isTdb = roleTdbText.includes(name) || (name === 'Push' && roleTdbText.includes('Push'));
+
+                                            return (
+                                                <button
+                                                    key={name}
+                                                    onClick={() => confirmActionRoll(char.id, vital, name)}
+                                                    className="text-left px-4 py-3 bg-slate-900 hover:bg-slate-700 border border-slate-700 rounded transition-colors group relative"
+                                                >
+                                                    <div className="flex justify-between items-center mb-1">
+                                                        <span className="font-bold text-sm text-white">{name}</span>
+                                                        {isTdb && <span className="text-[9px] px-1.5 py-0.5 bg-amber-600 text-white rounded font-bold uppercase shadow-[0_0_8px_rgba(217,119,6,0.5)] border border-amber-400">Two Dice Bonus</span>}
+                                                    </div>
+                                                    <span className="text-[10px] text-slate-400 block leading-tight">{data.desc}</span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+
+                                    <button onClick={() => setActionRollPrompt(null)} className="w-full px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded text-white text-sm font-bold shadow">Cancel</button>
+                                </div>
+                            </div>
+                        );
+                    })()}
+
                     {redlinePrompt && (() => {
                         const char = crew.find(c => c.id === redlinePrompt.charId);
                         if (!char) return null;
@@ -2748,8 +2904,41 @@
                                             
                                             <button onClick={() => {
                                                 const sides = parseInt(char.vitals.grit.substring(1));
-                                                const roll = getRoll(redlinePrompt.manualRoll, 1, sides);
-                                                if (roll >= 4) {
+                                                const manualVal = redlinePrompt.manualRoll ? parseInt(redlinePrompt.manualRoll) : null;
+                                                let roll1 = manualVal || rollDice(1, sides);
+                                                let roll2 = null;
+                                                let isTdb = ROLES[char.role]?.tdb?.includes('Resist Stress');
+
+                                                let finalRoll = roll1;
+                                                let logText = manualVal ? `[Manual: ${roll1}]` : `Rolled ${roll1}`;
+
+                                                if (isTdb && !manualVal) {
+                                                    roll2 = rollDice(1, sides);
+                                                    finalRoll = Math.max(roll1, roll2);
+                                                    logText = `[TDB: ${roll1}, ${roll2} -> ${finalRoll}]`;
+                                                }
+
+                                                let isCritSuccess = (isTdb && roll2 !== null && roll1 === roll2 && finalRoll >= 4);
+                                                let isCritFumble = (isTdb && roll2 !== null && roll1 === roll2 && finalRoll < 4);
+
+                                                if (finalRoll >= 4) {
+                                                    let msg = `[REDLINE] ${char.name} rolled Grit (${char.vitals.grit}): ${logText} -> SUCCESS. They are clinging to life!`;
+                                                    if (isCritSuccess) msg += " CRITICAL SUCCESS!";
+                                                    addLog(msg);
+                                                    setRedlinePrompt({ ...redlinePrompt, step: 'revive' });
+                                                } else {
+                                                    let msg = `[REDLINE] ${char.name} rolled Grit (${char.vitals.grit}): ${logText} -> FAILED. They did not survive.`;
+                                                    if (isCritFumble) {
+                                                        msg += " CRITICAL FUMBLE! -1 Aircharge.";
+                                                        setAircharge(prev => Math.max(0, prev - 1));
+                                                    } else {
+                                                        msg += " -1 Aircharge.";
+                                                        setAircharge(prev => Math.max(0, prev - 1));
+                                                    }
+                                                    addLog(msg);
+                                                    updateCharacter(char.id, 'status', 'Dead');
+                                                    setRedlinePrompt(null);
+                                                }
                                                     addLog(`[REDLINE] ${char.name} rolled ${redlinePrompt.manualRoll ? `[Manual: ${roll}]` : roll} on Grit. They are clinging to life!`);
                                                     setRedlinePrompt({ ...redlinePrompt, step: 'revive' });
                                                 } else {
@@ -3274,7 +3463,7 @@
                         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 no-print">
                             <div className="bg-slate-800 border border-slate-600 p-6 rounded-lg shadow-xl max-w-sm w-full">
                                 <h3 className="text-xl font-bold text-white mb-2">Acquire New Vessel</h3>
-                                <p className="text-slate-300 mb-4 text-sm">Transferring to {shipChangePrompt.newShip}. This will reset your Ship Upgrades.</p>
+                                <p className="text-slate-300 mb-4 text-sm">Transferring to {shipChangePrompt.newShip}. Your Ship Upgrades will persist.</p>
                                 {SHIPS[shipChangePrompt.newShip].crewCount < crew.length && (
                                     <p className="text-red-400 font-bold mb-4 text-sm border border-red-900/50 p-2 rounded bg-red-950/20">WARNING: This limits your crew to {SHIPS[shipChangePrompt.newShip].crewCount} and will permanently remove the last Scrapjack(s) on your roster.</p>
                                 )}
@@ -4575,7 +4764,7 @@
                                                                             </span>
                                                                         </div>
                                                                         <div className="flex gap-1 flex-shrink-0">
-                                                                            <button onClick={() => handleStandardRoll(char.id, v)} disabled={state !== 'ready'} className="bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-700 disabled:text-slate-500 text-white text-[10px] font-bold px-2 py-1 rounded shadow">Roll</button>
+                                                                            <button onClick={() => triggerActionRoll(char.id, v)} disabled={state !== 'ready'} className="bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-700 disabled:text-slate-500 text-white text-[10px] font-bold px-2 py-1 rounded shadow">Roll</button>
                                                                             <button onClick={toggleUsed} disabled={state === 'disabled'} className="bg-slate-700 hover:bg-slate-600 disabled:bg-slate-800 text-white text-[10px] font-bold px-2 py-1 rounded shadow">Toggle</button>
                                                                         </div>
                                                                     </div>
@@ -5047,7 +5236,7 @@
                                                         <li><strong>Healing:</strong> Spend Salvage to heal Wounds (4 Salvage/Wound) or clear Scars (20 Salvage). All Stress is cleared automatically.</li>
                                                         <li><strong>Sell Gear:</strong> Sell unused Utility Items/Mods from the locker for 4 Salvage each.</li>
                                                         <li><strong>Upgrades:</strong> Purchase Ship Upgrades or Crew Training/Knacks.</li>
-                                                        <li><strong>New Ship:</strong> When ACR Debt hits 0, you must buy out the current ship and roll for a new class. Upgrades and the Crew Locker persist.</li>
+                                                        <li><strong>New Ship:</strong> When ACR Debt hits 0, you must buy out the current ship and roll for a new class. Upgrades, the Crew Locker, and existing EVA Suits persist.</li>
                                                     </ol>
                                                 </section>
 
