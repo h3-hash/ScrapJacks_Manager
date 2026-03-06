@@ -758,6 +758,54 @@
             const randomizeAllNames = () => {
                 setCrew(prev => prev.map(c => ({ ...c, name: getRandomName() })));
             };
+
+            const randomizeCrew = () => {
+                const availableRoles = Object.keys(ROLES);
+                const meleeWeapons = Object.keys(WEAPONS_MELEE).filter(w => w !== 'None');
+                const standardRanged = Object.keys(WEAPONS_RANGED).filter(w => w !== 'None' && !WEAPONS_RANGED[w].ydOnly);
+                const ydRanged = Object.keys(WEAPONS_RANGED).filter(w => w !== 'None');
+                const knacksList = Object.keys(KNACKS);
+                const rattlesList = Object.keys(RATTLES);
+                const diceSets = [
+                    { load: 'D10', focus: 'D8', grit: 'D6' },
+                    { load: 'D10', focus: 'D6', grit: 'D8' },
+                    { load: 'D8', focus: 'D10', grit: 'D6' },
+                    { load: 'D8', focus: 'D6', grit: 'D10' },
+                    { load: 'D6', focus: 'D10', grit: 'D8' },
+                    { load: 'D6', focus: 'D8', grit: 'D10' }
+                ];
+
+                setCrew(prev => prev.map((c, i) => {
+                    // Try to distribute distinct roles initially if crew count permits
+                    const role = availableRoles[i % availableRoles.length];
+                    const isYarddog = role.startsWith('Yarddog');
+                    const vitals = diceSets[Math.floor(getSecureRandom() * diceSets.length)];
+                    const knack = knacksList[Math.floor(getSecureRandom() * knacksList.length)];
+
+                    // Rattles: ensure it's compatible
+                    let rattle = rattlesList[Math.floor(getSecureRandom() * rattlesList.length)];
+                    while (rattle === "Spacer's Shake" && (knack === "Wire Head" || knack === "Quick Stitch")) {
+                        rattle = rattlesList[Math.floor(getSecureRandom() * rattlesList.length)];
+                    }
+
+                    const melee = meleeWeapons[Math.floor(getSecureRandom() * meleeWeapons.length)];
+                    const rangedPool = isYarddog ? ydRanged : standardRanged;
+                    const ranged = rangedPool[Math.floor(getSecureRandom() * rangedPool.length)];
+
+                    return {
+                        ...c,
+                        name: getRandomName(),
+                        role: role,
+                        vitals: vitals,
+                        knack: knack,
+                        rattle: rattle,
+                        melee: melee,
+                        ranged: ranged,
+                        trainingModule: 'None',
+                        veteranKnack: 'None'
+                    };
+                }));
+            };
             
             const handlePrint = (layoutType) => {
                 setPrintLayout(layoutType);
@@ -3762,13 +3810,22 @@
                                 </div>
                                 <div>
                                     <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Crew Actions</label>
-                                    <button 
-                                        onClick={randomizeAllNames}
-                                        className="w-full bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white text-sm font-bold p-2 rounded flex justify-center items-center gap-2 transition-colors shadow-sm"
-                                        title="Generate random names for the entire crew"
-                                    >
-                                        <IconDice /> Reroll Names
-                                    </button>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={randomizeAllNames}
+                                            className="flex-1 bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white text-sm font-bold p-2 rounded flex justify-center items-center gap-2 transition-colors shadow-sm"
+                                            title="Generate random names for the entire crew"
+                                        >
+                                            <IconDice /> Reroll Names
+                                        </button>
+                                        <button
+                                            onClick={randomizeCrew}
+                                            className="flex-1 bg-emerald-700 hover:bg-emerald-600 border border-emerald-600 text-white text-sm font-bold p-2 rounded flex justify-center items-center gap-2 transition-colors shadow-sm"
+                                            title="Generate a completely random crew (Roles, Dice, Traits, Gear)"
+                                        >
+                                            <IconDice /> Randomize Crew
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
