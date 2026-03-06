@@ -633,6 +633,7 @@
             const [playLog, setPlayLog] = useState([]);
             const [turnHistory, setTurnHistory] = useState(null);
             const [missionLevel, setMissionLevel] = useState(1);
+            const [rolledSiteConditions, setRolledSiteConditions] = useState([]);
             
             const [activeObjectives, setActiveObjectives] = useState([]);
             const [activeQuietPull, setActiveQuietPull] = useState(null);
@@ -657,7 +658,7 @@
                 const dataToSave = {
                     shipClass, salvage, acrDebt, aircharge, crewName, crew, crewLocker,
                     jobCount, campaignLog, traces, shipUpgrades, activeContract, cleanExitGoal,
-                    turn, phase, playLog, missionLevel, activeObjectives, activeQuietPull,
+                    turn, phase, playLog, missionLevel, rolledSiteConditions, activeObjectives, activeQuietPull,
                     pressureBuilding, hitchSkips, nextMhuHazardClear, nextMhuHitchMinus1, nextMhuHitchPlus1, nextMhuHitchHullShift, nextMhuHitchPrime, crewBuffs,
                     activeEnemies, activeHazards, charRollInputs, manualRolls, pendingChoices
                 };
@@ -708,6 +709,7 @@
                         if(data.phase) setPhase(data.phase);
                         if(data.playLog) setPlayLog(data.playLog);
                         if(data.missionLevel !== undefined) setMissionLevel(data.missionLevel);
+                        if(data.rolledSiteConditions !== undefined) setRolledSiteConditions(data.rolledSiteConditions);
                         if(data.activeObjectives) setActiveObjectives(data.activeObjectives);
                         if(data.activeQuietPull !== undefined) setActiveQuietPull(data.activeQuietPull);
                         if(data.pressureBuilding !== undefined) setPressureBuilding(data.pressureBuilding);
@@ -1901,6 +1903,7 @@
                     phase,
                     aircharge,
                     playLog: [...playLog],
+                    rolledSiteConditions: [...rolledSiteConditions],
                     pressureBuilding,
                     hitchSkips,
                     nextMhuHazardClear,
@@ -2495,7 +2498,10 @@
                 saveHistory();
 
                 if (phase === 'Breach') {
-                    if (turn === 1) rollSiteCondition(manualRolls.site);
+                    if (!rolledSiteConditions.includes(missionLevel)) {
+                        rollSiteCondition(manualRolls.site);
+                        setRolledSiteConditions(prev => [...prev, missionLevel]);
+                    }
                     rollBreach(manualRolls.hazard);
                     rollObjective(manualRolls.objective);
                     setManualRolls(p => ({...p, site: '', hazard: '', objective: ''}));
@@ -2590,6 +2596,7 @@
                 setNextMhuHitchPrime(turnHistory.nextMhuHitchPrime || false);
                 setCrewBuffs(turnHistory.crewBuffs || []);
                 setPlayLog([`[Turn ${turnHistory.turn} - ${turnHistory.phase}] Undo: Reverted last action.`, ...turnHistory.playLog]);
+                if(turnHistory.rolledSiteConditions) setRolledSiteConditions([...turnHistory.rolledSiteConditions]);
                 setCrew(turnHistory.crew);
                 setActiveEnemies(turnHistory.activeEnemies || []);
                 setActiveHazards(turnHistory.activeHazards || []);
@@ -2603,6 +2610,7 @@
                 setTurn(1);
                 setPhase('Breach');
                 setMissionLevel(1);
+                setRolledSiteConditions([]);
                 setAircharge(SHIPS[shipClass].aircharge);
                 setSalvage(0);
                 setAcrDebt(SHIPS[shipClass].acr);
@@ -2663,6 +2671,7 @@
                 setPlayLog([]);
                 setTurnHistory(null);
                 setMissionLevel(1);
+                setRolledSiteConditions([]);
                 setActiveObjectives([]);
                 setActiveQuietPull(null);
                 setPressureBuilding(false);
