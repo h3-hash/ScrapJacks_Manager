@@ -195,19 +195,16 @@
 
         // --- OFFICIAL GENERATION TABLES (RULEBOOK PAGES 43 - 52) ---
         const SITE_CONDITION_TABLE = {
-            1: 'Pristine - Operations normal. No environmental penalties.',
-            2: 'Pristine - Operations normal. No environmental penalties.',
-            3: 'Stable - Minor debris, otherwise normal.',
-            4: 'Stable - Minor debris, otherwise normal.',
-            5: 'Power Fluctuations - Intermittent darkness. -1 DD to Scan/Hack.',
-            6: 'Power Fluctuations - Intermittent darkness. -1 DD to Scan/Hack.',
-            7: 'Structural Damage - Loose bulkheads. Difficult terrain in 50% of zones.',
-            8: 'Structural Damage - Loose bulkheads. Difficult terrain in 50% of zones.',
-            9: 'Active Hazard - Environment compromised. Roll Hazard Table upon entry.',
-            10: 'Active Hazard - Environment compromised. Roll Hazard Table upon entry.',
-            11: 'Hostile Environment - Extreme conditions. All hazard rolls suffer -1 DD.',
-            12: 'Hostile Environment - Extreme conditions. All hazard rolls suffer -1 DD.',
-            13: 'Critical Instability - Site collapsing! Extreme structural and environmental hazards.'
+            1: 'Residual Power Grid - Ignore the AC cost to open one MHU this level (player’s choice).',
+            2: 'Active Defense Protocol - The first Hitch roll that results in Hostiles generates +1 hostile model per spawn point.',
+            3: 'Abandoned Tool Cache - The first POI in MHU 1 yields +1 Power Cell and +1 Patch Kit in addition to its normal result.',
+            4: 'Damaged Subsystems - The Environmental Hazard in MHU 2 costs 2 AC (or Power Cells) to restore instead of the normal amount.',
+            5: 'Forgotten Salvage Surplus - All POIs in MHU 2 yield +1D4 Salvage.',
+            6: 'Unstable Section - All Hazard results from Hitch rolls in MHU 3 are automatically replaced by Hull Shift.',
+            7: 'Emergency Medical Supply - The first POI in MHU 3 yields +1 Med Kit and +1 Patch Kit in addition to its normal result.',
+            8: 'Tracked Inventory - Any Quiet Pulls this level yield +1D4 Salvage, but automatically generate a Trace, even on a successful Access action.',
+            9: 'Functional Air Recycler - Ignore the first Suit Breach AC loss in one MHU (player’s choice).',
+            10: 'Rival Claim - The first Hitch roll that would generate Hostiles instead generates Raiders or Pirates (level appropriate).'
         };
 
         const MHU_ENTRY_HAZARD_TABLE = {
@@ -1930,13 +1927,8 @@
             // Rolling Mechanisms
             const rollSiteCondition = (manualRollStr) => {
                 const roll = getRoll(manualRollStr, 1, 10);
-                const total = Math.min(13, roll + missionLevel); // Cap at 13 since table goes to 13
-                const condition = SITE_CONDITION_TABLE[total] || SITE_CONDITION_TABLE[13];
-                addLog(`Site Condition (Level ${missionLevel}) [${manualRollStr ? 'Manual Roll' : 'Roll'}: ${roll} + ${missionLevel} = ${total}]: ${condition}`);
-                
-                if (total === 9 || total === 10) {
-                    addLog(`[ACTION REQUIRED]: Site Condition indicates active hazard. Be sure to roll on the Hazard Table immediately upon entry.`);
-                }
+                const condition = SITE_CONDITION_TABLE[roll];
+                addLog(`Site Condition (Level ${missionLevel}) [${manualRollStr ? 'Manual Roll' : 'Roll'}: ${roll}]: ${condition}`);
             };
 
             const rollBreach = (manualRollStr) => {
@@ -3289,13 +3281,20 @@
 
                                                 setChoicePrompt(null);
 
-                                                // Temporarily add to locker with new ID, then trigger assign.
-                                                // Actually better: just assign it. If it fails, we shouldn't have deleted the old one.
-                                                // Wait, assignGear directly modifies state via setCrew/setCrewLocker.
-                                                // Let's just pass a callback to assignGear or check success.
-                                                const success = assignGear(specificGear, charId, true);
-                                                if (success) {
-                                                    setCrewLocker(prev => prev.filter(g => g.id !== gear.id));
+                                                const charObj = crew.find(c => c.id === charId);
+                                                const hasDeepPockets = charObj && charObj.knack === 'Deep Pocket';
+
+                                                if (hasDeepPockets && category.includes('Utility')) {
+                                                    const success1 = assignGear({...specificGear, id: generateId()}, charId, true);
+                                                    const success2 = assignGear({...specificGear, id: generateId()}, charId, true);
+                                                    if (success1 || success2) {
+                                                        setCrewLocker(prev => prev.filter(g => g.id !== gear.id));
+                                                    }
+                                                } else {
+                                                    const success = assignGear(specificGear, charId, true);
+                                                    if (success) {
+                                                        setCrewLocker(prev => prev.filter(g => g.id !== gear.id));
+                                                    }
                                                 }
                                             }}
                                             className="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 rounded text-white text-sm font-bold transition-colors shadow"
