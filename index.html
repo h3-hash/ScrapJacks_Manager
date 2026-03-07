@@ -70,81 +70,97 @@
         };
 
         const SUITS = {
-            'Workskin': { dur: 'D4', move: 8, uSlots: 3, mods: 1 },
-            'Rig Suit': { dur: 'D4+1', move: 6, uSlots: 3, mods: 2 },
-            'Hardshell': { dur: 'D6', move: 5, uSlots: 4, mods: 3 },
-            'Void Suit': { dur: 'D6+1', move: 6, uSlots: 3, mods: 2 }
+            'Workskin': { dur: 'D4', move: 8, uSlots: 3, mods: 1, special: 'Lightweight and flexible. Minimal protection.' },
+            'Rig Suit': { dur: 'D4+1', move: 6, uSlots: 3, mods: 2, special: 'Standard issue for contracted crews.' },
+            'Hardshell': { dur: 'D6', move: 5, uSlots: 4, mods: 3, special: 'Heavy, restrictive, and difficult to maneuver.' },
+            'Void Suit': { dur: 'D6+1', move: 6, uSlots: 3, mods: 2, special: '+2 to all Resist rolls (Entry Conditions, Hazards, Redline effects). Ultra-rare and tightly controlled.' }
+        };
+
+
+        const ACTION_TYPES = {
+            'Aim': { type: 'Any', desc: '+2 to next Combat action, -2 to enemy DD.' },
+            'Assist': { type: 'Any', desc: 'Grants ally TDB or +2 to their next action.' },
+            'Interact/Use': { type: 'Any', desc: 'Use items, open doors, minor interactions.' },
+            'Move': { type: 'Load', desc: 'Additional movement after Free Move.' },
+            'Melee Combat': { type: 'Load', desc: 'Close-quarters fighting.' },
+            'Break/Brace': { type: 'Load', desc: 'Forceful dismantling or stabilizing.' },
+            'Ranged Combat': { type: 'Focus', desc: 'Attacking with firearms.' },
+            'Repair/Heal': { type: 'Focus', desc: 'Treat injuries, patch suits.' },
+            'Scan/Hack': { type: 'Focus', desc: 'Technical interaction with systems.' },
+            'Resist': { type: 'Grit', desc: 'Reaction. Die spent only on failure.' },
+            'Resist Stress': { type: 'Grit', desc: 'Save vs Terror or Redlined.' },
+            'Push': { type: 'Grit', desc: 'Costs 1 Aircharge. Success = refresh dice & move.' }
         };
 
         const WEAPONS_MELEE = {
-            'Wrecking Bar': { uSlots: 0, effects: 'Hit up to 2 adj, +1 Break/Brace' },
-            'Pulaski Axe': { uSlots: 0, effects: '-2 target DD, +1 Break/Brace, Breach' },
-            'Power Shears': { uSlots: -1, effects: '-2 Move, -1 Melee, +1 DD, +2 Break/Brace, -4 target DD' },
-            'Cutter Torch': { uSlots: -1, effects: '-1 target DD, +2 Break/Brace (Costs 1 U-Slot)' },
-            'Shock Baton': { uSlots: 0, effects: 'Fail=Stun, Robots -2 DD' },
-            'Vibro-Knife': { uSlots: 0, effects: 'Breach' },
+            'Wrecking Bar': { uSlots: 0, effects: 'Hit up to two adjacent hostiles in melee. +1 to Break/Brace.' },
+            'Pulaski Axe': { uSlots: 0, effects: '–2 to defender’s DD. +1 to Break/Brace. Wound causes Suit Breach.' },
+            'Power Shears': { uSlots: 0, effects: '–2″ Movement, –1 to Melee attacks. +1 to user’s DD. +2 to Break/Brace. –4 to defender’s DD.' },
+            'Cutter Torch': { uSlots: 1, effects: '–1 to defender’s DD. +2 to Break/Brace. Grants +1 Utility Slot.' },
+            'Shock Baton': { uSlots: 0, effects: 'Blocked hits force a second DD roll. Fail = target is Stunned. Robotic targets suffer –2 to DD.' },
+            'Vibro-Knife': { uSlots: 1, effects: 'Wound causes Suit Breach. Grants +1 Utility Slot.' },
             'None': { uSlots: 0, effects: 'Unarmed combat only.'}
         };
 
         const WEAPONS_RANGED = {
-            'Coil Pistol': { uSlots: 0, ydOnly: false, effects: '3", target rolls DD twice' },
-            'Mag-Hook': { uSlots: 0, ydOnly: false, effects: 'Melee-3", -1 target DD, Knock/Pull' },
-            'Bolt-Driver': { uSlots: -1, ydOnly: false, effects: 'Melee-3", -4 target DD (Costs 1 U-Slot)' },
-            'Riot Gun': { uSlots: 0, ydOnly: true, effects: '6", -1 target DD, Breach' },
-            'PitBull': { uSlots: -1, ydOnly: true, effects: '12", target rolls DD twice (Costs 1 U-Slot)' },
-            'Sunjet': { uSlots: -2, ydOnly: true, effects: 'Teardrop, -4 target DD, Burn (Costs 2 U-Slots)' },
+            'Coil Pistol': { uSlots: 0, ydOnly: false, effects: 'Range: 3″. Defender rolls DD twice per attack.' },
+            'Mag-Hook': { uSlots: 0, ydOnly: false, effects: 'Range: Melee–3″. Imposes -1 Penalty on target’s DD. Does not Wound. DD Fail = Called Effect. Declare effect before attack: Knock Prone or Pull target adjacent.' },
+            'Bolt-Driver': { uSlots: -1, ydOnly: false, effects: 'Range: Melee–3″. –4 to defender’s DD. Reduces carry capacity (–1 U-Slot).' },
+            'Riot Gun': { uSlots: 0, ydOnly: true, effects: 'Range: 6″. –1 to target’s DD. Wound causes Suit Breach.' },
+            'PitBull': { uSlots: -1, ydOnly: true, effects: 'Range: 12″. Defender rolls DD twice per attack. Reduces carry capacity (–1 U-Slot).' },
+            'Sunjet': { uSlots: -2, ydOnly: true, effects: 'Teardrop template. –4 to target’s DD. Destroys scenic terrain items including POIs, if applicable. –1″ Movement, –2 U-Slots. Wound causes Burn.' },
             'None': { uSlots: 0, ydOnly: false, effects: 'No ranged capability.'}
         };
 
         const KNACKS = {
-            'Space Ballet': { effect: 'Ignore zero-G movement penalties.' },
-            'Hatch Rat': { effect: '+1 DD when bypassing sealed doors/hatches.' },
-            'Wire Head': { effect: '+1 DD to Scan/Hack actions.' },
-            'Deep Pocket': { effect: 'Gain +1 Utility Slot capacity.' },
-            'Ship Breaker': { effect: '+1 DD to Break/Brace actions.' },
-            'Quick Stitch': { effect: '+1 DD to Repair/Heal actions.' }
+            'Space Ballet': { effect: 'May reroll any failed Movement-related Dodge/Defend roll made in Zero-G. Second result must be accepted.' },
+            'Hatch Rat': { effect: 'When searching a Point of Interest, double the total of any Salvage Value roll.' },
+            'Wire Head': { effect: 'May forgo Free Move to automatically succeed at a Scan/Hack action instead.' },
+            'Deep Pocket': { effect: 'One Utility Slot may hold two identical single-use items instead of one.' },
+            'Ship Breaker': { effect: 'May forgo Free Move to automatically succeed at a Break/Brace action instead.' },
+            'Quick Stitch': { effect: 'May forgo Free Move to automatically succeed at a Repair/Heal action instead.' }
         };
 
         const RATTLES = {
-            'Spacer\'s Shake': { effect: '-1 DD to all Ranged attacks.' },
-            'Frangible Flinch': { effect: '-1 DD to Resist Stress.' },
-            'Grav-Legs': { effect: '-2" Movement in standard gravity.' },
-            'Scarred Lungs': { effect: '-1 DD vs Toxic hazards.' },
-            'Seal Burns': { effect: '-1 DD vs Vacuum hazards.' },
-            'Nervous Tic': { effect: 'Cannot push Focus vital.' }
+            'Spacer\'s Shake': { effect: 'Suffer –1 to all Scan/Hack and Repair/Heal rolls. Cannot be taken with Wire Head or Quick Stitch.' },
+            'Frangible Flinch': { effect: 'When combat begins, must spend first action or Free Move to move into cover, if available.' },
+            'Grav-Legs': { effect: 'Suffer –1 to all Dodge/Defend rolls made in Zero-G environments.' },
+            'Scarred Lungs': { effect: 'Suffer –1 to Resist rolls made against Toxic Cloud or Nanite Swarm hazards.' },
+            'Seal Burns': { effect: 'Move Rate is reduced by 1″.' },
+            'Nervous Tic': { effect: 'Do not gain a Free Move on the first turn after entering a new MHU.' }
         };
         
         const EVA_MODS = {
-            'Mag-Boots': { effect: 'Ignore zero-G movement penalties.' },
-            'Carbon Fiber Plates': { effect: '+1 DD vs Physical damage.' },
-            'Shoulder Lamps': { effect: 'Ignore darkness penalties.' },
-            'Tool Harness': { effect: '+3 Utility Slots.' },
-            'Hardened Suit System': { effect: 'Ignore 1st Suit Breach per mission.' },
-            'Filter System': { effect: 'Ignore Toxic hazards.' }
+            'Mag-Boots': { effect: 'Ignore Zero-G. +1 vs Hull Shift and Hull Breach hazard rolls.' },
+            'Carbon Fiber Plates': { effect: '+1 DD vs Melee and Ranged attacks.' },
+            'Shoulder Lamps': { effect: 'Ignore Darkness Condition. Normal LOS for ranged attacks.' },
+            'Tool Harness': { effect: 'Gain +3 Utility Slots.' },
+            'Hardened Suit System': { effect: 'Ignore Flashbangs. +1 DD vs all Stun rolls.' },
+            'Filter System': { effect: 'Ignore Toxic Fumes hazards.' }
         };
 
         const WEAPON_MODS = {
             'None': { effect: '' },
-            'Laser Designator': { effect: '+1 to Ranged attacks.' },
-            'Mag-Sheath': { effect: '+1 Utility Slot (Frees capacity).' },
-            'Overcharge Port': { effect: '+1 Damage. Natural 1 on attack damages user.' },
-            'Smart Grip': { effect: '+1 to Melee or Ranged attacks.' },
-            'Custom Foregrip': { effect: 'Reroll 1s on attack.' },
-            'Bayonet Lug': { effect: '+1 Utility Slot (Frees capacity).' }
+            'Laser Designator': { effect: 'Ranged weapon. Lock in round destination. +1 to hit.' },
+            'Mag-Sheath': { effect: 'Melee weapon. Holds melee weapon. +1 U-Slot. Cannot be used on Power Shears.' },
+            'Overcharge Port': { effect: 'Ranged weapon. Spend a Power Cell to gain +4 damage (–4 target DD) for a single attack.' },
+            'Smart Grip': { effect: 'Melee weapon. Better control when striking. +1 to hit.' },
+            'Custom Foregrip': { effect: 'Ranged weapon. If stationary prior to ranged attack action, +1 to hit and +1 damage.' },
+            'Bayonet Lug': { effect: 'Ranged weapon. Attach Vibro-Knife. Gain +1 melee damage (–1 target DD), fulfill melee weapon slot, and +1 U-Slot.' }
         };
 
         const U_ITEMS = {
             'Empty': { effect: 'No item equipped.' },
-            'Med-Kit': { effect: 'Heal one Wound or clear one Stress.' },
+            'Med-Kit': { effect: 'Heal one Wound.' },
             'Patch-Kit': { effect: 'Repair one Suit Breach.' },
             'Override Chip': { effect: 'Automatically open a fused panel. Bypasses Scan/Hack.' },
             'Chem-Lights': { effect: 'Remove Darkness in one section for one turn.' },
             'Seal Foam': { effect: 'Repair Hull Breach in a Damaged section.' },
             'Det-Cord': { effect: 'Automatically open a stuck door or hatch. Bypasses Break/Brace.' },
             'Tether Line': { effect: 'Safe Zero-G movement for one Scrapjack for one turn.' },
-            'C-Dose': { effect: 'Restore a used Load or Focus die, or grant Two-Dice Bonus if unused. Side Effect: No Free Move next turn.' },
-            'Dazzler (Grenade)': { effect: 'Ranged attack. Organic hostiles roll DD at -4. LBT. Fail = Stunned.' },
-            'EMP (Grenade)': { effect: 'Robotic hostiles roll DD at -4. LBT. Fail = Wound.' },
+            'C-Dose': { effect: 'Restore a used Load or Focus die, or grant Two-Dice Bonus if that die type is unused. Side Effect: No Free Move next turn.' },
+            'Dazzler (Grenade)': { effect: 'Ranged attack. Organic hostiles roll DD at –4. Large Blast Template. (LBT) Fail = Stunned.' },
+            'EMP (Grenade)': { effect: 'Robotic hostiles roll DD at –4. LBT. Fail = Wound.' },
             'Power Cell': { effect: 'Consumable. Powers specific weapon mods or objectives.' }
         };
 
@@ -389,6 +405,9 @@
         };
 
         const VERSION_HISTORY = [
+            { version: "1.55.0", date: "2026-03-05", notes: ["Updated Points of Interest tables to exact rulebook text.", "Fixed POI failure logic to accurately trigger specific Hitch penalties (e.g. Alarm +1, forced Prime generation, and Hull Shifts)."] },
+            { version: "1.54.0", date: "2026-03-05", notes: ["Upgraded random number generator to use cryptographically secure `crypto.getRandomValues()` for all dice rolls and random table generation."] },
+            { version: "1.53.0", date: "2026-03-05", notes: ["Updated all equipment, weapon, utility, and mod tables to match exact rulebook verbiage.", "Automated complex combat modifiers like Overcharge Port cost, Custom Foregrip stationary requirement, and Shock Baton's second defense roll logic.", "Fixed Hardened Suit System to correctly trigger against all Stun attacks."] },
             { version: "1.52.0", date: "2026-03-04", notes: ["Rulebook Compliance Pass: Corrected Large Xeno Types to proper Tier II stats (D8/D8).", "Corrected Power Shears and Vibro-Knife encumbrance costs to match the rulebook.", "Removed unused legacy tables to optimize performance and prevent truncation."] },
             { version: "1.51.0", date: "2026-03-04", notes: ["Fully integrated Grenade combat mechanics directly into Utility Slots.", "Clicking a Grenade (Dazzler or EMP) now prompts a specialized 'Throw Grenade' combat modal that consumes an Action Die.", "Added support for target visibility penalty (-1 Attack if indirect/not visible).", "Added automated On Target / Off Target resolution. A successful throw perfectly centers the LBT and can auto-resolve against a selected primary target based on their type (Robotic vs Organic).", "Failed throws automatically execute the 1D10 Deviation Scatter mechanic, calculating exact direction and drift distance."] },
             { version: "1.50.0", date: "2026-03-04", notes: ["Implemented 'Pending Choices Queue' system. Resolving Quiet Pulls and Specific Objectives (like L2_6 Black Box) now immediately surfaces a mandatory choice popup for selecting specific rewards or mechanical outcomes instead of just a text log."] },
@@ -399,21 +418,31 @@
             { version: "1.45.0", date: "2026-03-03", notes: ["Separated Interactive POIs from MHU Objectives in the tracking UI. POIs now generate into their own dedicated block and will no longer overwrite the Current MHU Objective.", "Updated resolution prompts and logging terminology to distinguish between 'Completing an Objective' and 'Resolving a POI'."] }
         ];
 
+        // Cryptographically secure random number generator between 0 (inclusive) and 1 (exclusive)
+        const getSecureRandom = () => {
+            if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+                const array = new Uint32Array(1);
+                crypto.getRandomValues(array);
+                return array[0] / (0xffffffff + 1);
+            }
+            return Math.random(); // Fallback
+        };
+
         // Safely generate IDs even if crypto is unavailable
         const generateId = () => {
             if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
-            return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+            return getSecureRandom().toString(36).substring(2, 15) + getSecureRandom().toString(36).substring(2, 15);
         };
 
         const getRandomName = () => {
-            const first = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)];
-            const last = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)];
+            const first = FIRST_NAMES[Math.floor(getSecureRandom() * FIRST_NAMES.length)];
+            const last = LAST_NAMES[Math.floor(getSecureRandom() * LAST_NAMES.length)];
             return `${first} ${last}`;
         };
 
         const getRandomCrewName = () => {
-            const adj = CREW_ADJECTIVES[Math.floor(Math.random() * CREW_ADJECTIVES.length)];
-            const noun = CREW_NOUNS[Math.floor(Math.random() * CREW_NOUNS.length)];
+            const adj = CREW_ADJECTIVES[Math.floor(getSecureRandom() * CREW_ADJECTIVES.length)];
+            const noun = CREW_NOUNS[Math.floor(getSecureRandom() * CREW_NOUNS.length)];
             return `The ${adj} ${noun}`;
         };
         
@@ -426,7 +455,7 @@
         const rollDice = (count, sides) => {
             let total = 0;
             for(let i = 0; i < count; i++) {
-                total += Math.floor(Math.random() * sides) + 1;
+                total += Math.floor(getSecureRandom() * sides) + 1;
             }
             return total;
         };
@@ -434,18 +463,18 @@
         const getRandomItem = (type) => {
             if (type === 'uItem') {
                 const keys = Object.keys(U_ITEMS).filter(k => k !== 'Empty');
-                return keys[Math.floor(Math.random() * keys.length)];
+                return keys[Math.floor(getSecureRandom() * keys.length)];
             } else if (type === 'evaMod') {
                 const keys = Object.keys(EVA_MODS);
-                return keys[Math.floor(Math.random() * keys.length)];
+                return keys[Math.floor(getSecureRandom() * keys.length)];
             } else if (type === 'wepMod') {
                 const keys = Object.keys(WEAPON_MODS).filter(k => k !== 'None');
-                return keys[Math.floor(Math.random() * keys.length)];
+                return keys[Math.floor(getSecureRandom() * keys.length)];
             } else if (type === 'mod') {
                 const wepMods = Object.keys(WEAPON_MODS).filter(k => k !== 'None');
                 const evaMods = Object.keys(EVA_MODS);
                 const allMods = [...wepMods, ...evaMods];
-                return allMods[Math.floor(Math.random() * allMods.length)];
+                return allMods[Math.floor(getSecureRandom() * allMods.length)];
             }
             return 'Scrap Metal';
         };
@@ -474,7 +503,7 @@
                 scars: [],
                 status: 'Active',
                 redlineSurvivals: 0,
-                live: { usedLoad: false, usedFocus: false, usedGrit: false, uItemUsed: Array(6).fill(false), pushed: false, stunned: false }
+                live: { usedMove: false, usedLoad: false, usedFocus: false, usedGrit: false, uItemUsed: Array(6).fill(false), pushed: false, stunned: false }
             }));
         }
 
@@ -554,7 +583,7 @@
             const [aircharge, setAircharge] = useState(SHIPS['Class C - Tug'].aircharge);
             const [crewName, setCrewName] = useState(() => getRandomCrewName());
             const [crew, setCrew] = useState(() => generateInitialCrew('Class C - Tug'));
-            const [legacyLocker, setLegacyLocker] = useState([]);
+            const [crewLocker, setCrewLocker] = useState([]);
             
             // Campaign State
             const [jobCount, setJobCount] = useState(1);
@@ -565,6 +594,7 @@
             const [cleanExitGoal, setCleanExitGoal] = useState(500);
 
             const [modalConfig, setModalConfig] = useState(null);
+            const [actionRollPrompt, setActionRollPrompt] = useState(null);
             const [pendingPenaltyPrompt, setPendingPenaltyPrompt] = useState(null); 
             const [redlinePrompt, setRedlinePrompt] = useState(null); 
             const [shipChangePrompt, setShipChangePrompt] = useState(null);
@@ -574,8 +604,11 @@
             const [objectivePrompt, setObjectivePrompt] = useState(null);
             const [tableRollPrompt, setTableRollPrompt] = useState(null);
             const [grenadePrompt, setGrenadePrompt] = useState(null);
+            const [choicePrompt, setChoicePrompt] = useState(null);
+            const [showChangelog, setShowChangelog] = useState(false);
+            const [showHelpModal, setShowHelpModal] = useState(false);
             
-            const [combatForm, setCombatForm] = useState({ vital: 'load', weaponType: 'ranged', targetId: '', manualAtk: '', manualDef: '', isAiming: false, isAssisted: false });
+            const [combatForm, setCombatForm] = useState({ vital: 'load', weaponType: 'ranged', targetId: '', manualAtk: '', manualDef: '', isAiming: false, isAssisted: false, useOvercharge: false, isStationary: false });
             const [qpForm, setQpForm] = useState({ actorId: '', die: 'load' });
             const [grenadeForm, setGrenadeForm] = useState({ vital: 'focus', targetId: 'ground', isVisible: true, manualRoll: '' });
             
@@ -600,6 +633,7 @@
             const [playLog, setPlayLog] = useState([]);
             const [turnHistory, setTurnHistory] = useState(null);
             const [missionLevel, setMissionLevel] = useState(1);
+            const [rolledSiteConditions, setRolledSiteConditions] = useState([]);
             
             const [activeObjectives, setActiveObjectives] = useState([]);
             const [activeQuietPull, setActiveQuietPull] = useState(null);
@@ -608,6 +642,7 @@
             const [hitchSkips, setHitchSkips] = useState(0);
             const [nextMhuHazardClear, setNextMhuHazardClear] = useState(false);
             const [nextMhuHitchMinus1, setNextMhuHitchMinus1] = useState(false);
+            const [nextMhuHitchPlus1, setNextMhuHitchPlus1] = useState(false);
             const [nextMhuHitchHullShift, setNextMhuHitchHullShift] = useState(false);
             const [nextMhuHitchPrime, setNextMhuHitchPrime] = useState(false);
             const [crewBuffs, setCrewBuffs] = useState([]);
@@ -621,10 +656,10 @@
             // Save and Load Handlers
             const exportData = () => {
                 const dataToSave = {
-                    shipClass, salvage, acrDebt, aircharge, crewName, crew, legacyLocker,
+                    shipClass, salvage, acrDebt, aircharge, crewName, crew, crewLocker,
                     jobCount, campaignLog, traces, shipUpgrades, activeContract, cleanExitGoal,
-                    turn, phase, playLog, missionLevel, activeObjectives, activeQuietPull,
-                    pressureBuilding, hitchSkips, nextMhuHazardClear, nextMhuHitchMinus1, nextMhuHitchHullShift, nextMhuHitchPrime, crewBuffs,
+                    turn, phase, playLog, missionLevel, rolledSiteConditions, activeObjectives, activeQuietPull,
+                    pressureBuilding, hitchSkips, nextMhuHazardClear, nextMhuHitchMinus1, nextMhuHitchPlus1, nextMhuHitchHullShift, nextMhuHitchPrime, crewBuffs,
                     activeEnemies, activeHazards, charRollInputs, manualRolls, pendingChoices
                 };
                 const jsonString = JSON.stringify(dataToSave, null, 2);
@@ -662,7 +697,8 @@
                             })));
                         }
                         
-                        if(data.legacyLocker) setLegacyLocker(data.legacyLocker);
+                        if(data.crewLocker) setCrewLocker(data.crewLocker);
+                        else if(data.legacyLocker) setCrewLocker(data.legacyLocker);
                         if(data.jobCount !== undefined) setJobCount(data.jobCount);
                         if(data.campaignLog) setCampaignLog(data.campaignLog);
                         if(data.traces !== undefined) setTraces(data.traces);
@@ -673,12 +709,14 @@
                         if(data.phase) setPhase(data.phase);
                         if(data.playLog) setPlayLog(data.playLog);
                         if(data.missionLevel !== undefined) setMissionLevel(data.missionLevel);
+                        if(data.rolledSiteConditions !== undefined) setRolledSiteConditions(data.rolledSiteConditions);
                         if(data.activeObjectives) setActiveObjectives(data.activeObjectives);
                         if(data.activeQuietPull !== undefined) setActiveQuietPull(data.activeQuietPull);
                         if(data.pressureBuilding !== undefined) setPressureBuilding(data.pressureBuilding);
                         if(data.hitchSkips !== undefined) setHitchSkips(data.hitchSkips);
                         if(data.nextMhuHazardClear !== undefined) setNextMhuHazardClear(data.nextMhuHazardClear);
                         if(data.nextMhuHitchMinus1 !== undefined) setNextMhuHitchMinus1(data.nextMhuHitchMinus1);
+                        if(data.nextMhuHitchPlus1 !== undefined) setNextMhuHitchPlus1(data.nextMhuHitchPlus1);
                         if(data.nextMhuHitchHullShift !== undefined) setNextMhuHitchHullShift(data.nextMhuHitchHullShift);
                         if(data.nextMhuHitchPrime !== undefined) setNextMhuHitchPrime(data.nextMhuHitchPrime);
                         if(data.crewBuffs) setCrewBuffs(data.crewBuffs);
@@ -722,6 +760,54 @@
             const randomizeAllNames = () => {
                 setCrew(prev => prev.map(c => ({ ...c, name: getRandomName() })));
             };
+
+            const randomizeCrew = () => {
+                const availableRoles = Object.keys(ROLES);
+                const meleeWeapons = Object.keys(WEAPONS_MELEE).filter(w => w !== 'None');
+                const standardRanged = Object.keys(WEAPONS_RANGED).filter(w => w !== 'None' && !WEAPONS_RANGED[w].ydOnly);
+                const ydRanged = Object.keys(WEAPONS_RANGED).filter(w => w !== 'None');
+                const knacksList = Object.keys(KNACKS);
+                const rattlesList = Object.keys(RATTLES);
+                const diceSets = [
+                    { load: 'D10', focus: 'D8', grit: 'D6' },
+                    { load: 'D10', focus: 'D6', grit: 'D8' },
+                    { load: 'D8', focus: 'D10', grit: 'D6' },
+                    { load: 'D8', focus: 'D6', grit: 'D10' },
+                    { load: 'D6', focus: 'D10', grit: 'D8' },
+                    { load: 'D6', focus: 'D8', grit: 'D10' }
+                ];
+
+                setCrew(prev => prev.map((c, i) => {
+                    // Try to distribute distinct roles initially if crew count permits
+                    const role = availableRoles[i % availableRoles.length];
+                    const isYarddog = role.startsWith('Yarddog');
+                    const vitals = diceSets[Math.floor(getSecureRandom() * diceSets.length)];
+                    const knack = knacksList[Math.floor(getSecureRandom() * knacksList.length)];
+
+                    // Rattles: ensure it's compatible
+                    let rattle = rattlesList[Math.floor(getSecureRandom() * rattlesList.length)];
+                    while (rattle === "Spacer's Shake" && (knack === "Wire Head" || knack === "Quick Stitch")) {
+                        rattle = rattlesList[Math.floor(getSecureRandom() * rattlesList.length)];
+                    }
+
+                    const melee = meleeWeapons[Math.floor(getSecureRandom() * meleeWeapons.length)];
+                    const rangedPool = isYarddog ? ydRanged : standardRanged;
+                    const ranged = rangedPool[Math.floor(getSecureRandom() * rangedPool.length)];
+
+                    return {
+                        ...c,
+                        name: getRandomName(),
+                        role: role,
+                        vitals: vitals,
+                        knack: knack,
+                        rattle: rattle,
+                        melee: melee,
+                        ranged: ranged,
+                        trainingModule: 'None',
+                        veteranKnack: 'None'
+                    };
+                }));
+            };
             
             const handlePrint = (layoutType) => {
                 setPrintLayout(layoutType);
@@ -735,12 +821,12 @@
             const applyShipChange = (newShip, rollLegacy, manualRollStr) => {
                 const newConfig = SHIPS[newShip];
                 
-                let items = rollLegacy ? [] : [...legacyLocker];
+                let items = [...crewLocker];
                 let buff = null;
                 
                 if (rollLegacy) {
                     const roll = getRoll(manualRollStr, 1, 6);
-                    let logMsg = `Legacy Locker Roll [${roll}]: `;
+                    let logMsg = `Crew Locker Found Items [${roll}]: `;
 
                     switch(roll) {
                         case 1:
@@ -771,10 +857,10 @@
                             break;
                     }
                     addCampaignLog(`Acquired ${newShip}. ${logMsg}`);
-                    setLegacyLocker(items);
+                    setCrewLocker(items);
                     if (buff) setCrewBuffs(prev => [...prev, buff]);
                 } else {
-                    addCampaignLog(`Acquired ${newShip}. Ship upgrades reset.`);
+                    addCampaignLog(`Acquired ${newShip}. Ship upgrades persist.`);
                 }
 
                 setShipClass(newShip);
@@ -792,17 +878,39 @@
                 setNextMhuHitchMinus1(false);
                 setNextMhuHitchHullShift(false);
                 setNextMhuHitchPrime(false);
-                setShipUpgrades([]); 
+                // // setShipUpgrades([]); // User request: Upgrades persist
                 setManualRolls(p => ({...p, legacy: ''}));
                 setPendingChoices([]);
                 
                 setCrew(prev => {
+                    let nextCrewLocker = [...crewLocker];
                     let updatedCrew = [...prev];
                     
                     if (updatedCrew.length > newConfig.crewCount) {
                         updatedCrew = updatedCrew.slice(0, newConfig.crewCount);
                     }
                     
+                    // Assign existing crew the new default suits, but stash their old suits in locker first
+                    updatedCrew = updatedCrew.map((member, i) => {
+                        let suitItemName = member.suit;
+                        if (member.evaMods && member.evaMods.length > 0) {
+                            suitItemName += ` (Mods: ${member.evaMods.join(', ')})`;
+                        }
+                        nextCrewLocker.push({
+                            id: generateId(),
+                            name: suitItemName,
+                            type: 'evaSuit',
+                            baseSuit: member.suit,
+                            evaMods: [...(member.evaMods || [])]
+                        });
+
+                        return {
+                            ...member,
+                            suit: newConfig.suits[i] || 'Workskin',
+                            evaMods: [] // Clear mods, as they transferred with the old suit
+                        };
+                    });
+
                     while (updatedCrew.length < newConfig.crewCount) {
                         const i = updatedCrew.length;
                         updatedCrew.push({
@@ -827,9 +935,10 @@
                             scars: [],
                             status: 'Active',
                             redlineSurvivals: 0,
-                            live: { usedLoad: false, usedFocus: false, usedGrit: false, uItemUsed: Array(6).fill(false), pushed: false, stunned: false }
+                            live: { usedMove: false, usedLoad: false, usedFocus: false, usedGrit: false, uItemUsed: Array(6).fill(false), pushed: false, stunned: false }
                         });
                     }
+                    setCrewLocker(nextCrewLocker);
                     return updatedCrew;
                 });
             };
@@ -1003,25 +1112,107 @@
                 if (crew.length === 0) return;
                 const aliveCrew = crew.filter(c => c.status === 'Active' && c.wounds < 4);
                 const targetPool = aliveCrew.length > 0 ? aliveCrew : crew;
-                const randomChar = targetPool[Math.floor(Math.random() * targetPool.length)];
+                const randomChar = targetPool[Math.floor(getSecureRandom() * targetPool.length)];
                 
                 handleWoundChange(randomChar, Math.min(4, randomChar.wounds + amount));
                 addLog(`[RANDOM WOUND]: ${randomChar.name} suffered ${amount} Wound(s) from ${reason}.`);
             };
 
-            const handleStandardRoll = (charId, vital) => {
-                saveHistory();
+            const triggerActionRoll = (charId, vital) => {
+                setActionRollPrompt({ charId, vital });
+            };
+
+            const confirmActionRoll = (charId, vital, actionName) => {
                 const char = crew.find(c => c.id === charId);
+                if (actionName === 'Melee Combat') {
+                    setCombatPrompt({ charId, weaponType: 'melee' });
+                    setActionRollPrompt(null);
+                    return;
+                }
+                if (actionName === 'Ranged Combat') {
+                    setCombatPrompt({ charId, weaponType: 'ranged' });
+                    setActionRollPrompt(null);
+                    return;
+                }
+                if (actionName === 'Push') {
+                    handlePush(charId);
+                    setActionRollPrompt(null);
+                    return;
+                }
+
+                saveHistory();
                 const sides = parseInt(char.vitals[vital].substring(1));
                 const manualVal = charRollInputs[charId];
                 
-                const roll = manualVal ? parseInt(manualVal) : rollDice(1, sides);
-                const success = roll >= 4;
+                let roll1 = manualVal ? parseInt(manualVal) : rollDice(1, sides);
+                let roll2 = null;
+                let isTdb = false;
                 
-                updateLiveState(charId, `used${vital.charAt(0).toUpperCase() + vital.slice(1)}`, true);
-                updateCharRollInput(charId, ''); 
-                
-                addLog(`[ACTION] ${char.name} rolled ${vital.toUpperCase()} (${char.vitals[vital]}): ${manualVal ? `[Manual: ${roll}]` : `Rolled ${roll}`} -> ${success ? 'SUCCESS' : 'FAILED'}.`);
+                // Determine if they get TDB based on their Role
+                const roleTdbText = ROLES[char.role]?.tdb || '';
+                if (roleTdbText.includes(actionName) || (actionName === 'Push' && roleTdbText.includes('Push'))) {
+                    isTdb = true;
+                }
+
+                let finalRoll = roll1;
+                let logText = manualVal ? `[Manual: ${roll1}]` : `Rolled ${roll1}`;
+
+                if (isTdb && !manualVal) {
+                    roll2 = rollDice(1, sides);
+                    finalRoll = Math.max(roll1, roll2);
+                    logText = `[TDB: ${roll1}, ${roll2} -> ${finalRoll}]`;
+                }
+
+                const success = finalRoll >= 4;
+                let isCritSuccess = false;
+                let isCritFumble = false;
+                let logMsg = `[ACTION: ${actionName}] ${char.name} rolled ${vital.toUpperCase()} (${char.vitals[vital]}): ${logText} -> ${success ? 'SUCCESS' : 'FAILED'}.`;
+
+                if (isTdb && roll2 !== null && roll1 === roll2) {
+                    if (success) {
+                        isCritSuccess = true;
+                        logMsg += ` CRITICAL SUCCESS! Die is NOT expended.`;
+                    } else {
+                        isCritFumble = true;
+                        logMsg += ` CRITICAL FUMBLE! Activation ends immediately. -1 Aircharge.`;
+                        setAircharge(prev => Math.max(0, prev - 1));
+                    }
+                }
+
+                if (!isCritSuccess) {
+                    // Expend the die unless it's a Grit action that passed
+                    if (vital === 'grit' && actionName.includes('Resist') && success) {
+                        logMsg += ` (Grit die retained on success).`;
+                    } else if (actionName === 'Push') {
+                        // Push is handled separately or we log it here
+                        logMsg += ` (Push costs 1 AC regardless).`;
+                        setAircharge(prev => Math.max(0, prev - 1));
+                        updateLiveState(charId, `used${vital.charAt(0).toUpperCase() + vital.slice(1)}`, true);
+                    } else {
+                        updateLiveState(charId, `used${vital.charAt(0).toUpperCase() + vital.slice(1)}`, true);
+                    }
+                }
+
+                if (isCritFumble) {
+                    // End activation = spend all dice (or just mark them pushed/done)
+                    updateLiveState(charId, 'usedMove', true);
+                    updateLiveState(charId, 'usedLoad', true);
+                    updateLiveState(charId, 'usedFocus', true);
+                    updateLiveState(charId, 'usedGrit', true);
+                }
+
+                if (actionName === 'Push' && success && !isCritFumble) {
+                    updateLiveState(charId, 'usedMove', false);
+                    updateLiveState(charId, 'usedLoad', false);
+                    updateLiveState(charId, 'usedFocus', false);
+                    updateLiveState(charId, 'usedGrit', false);
+                    updateLiveState(charId, 'pushed', true);
+                    logMsg += ` Regained Free Move and Full Action Dice Pool.`;
+                }
+
+                updateCharRollInput(charId, '');
+                addLog(logMsg);
+                setActionRollPrompt(null);
             };
             
             const resolveStun = (charId) => {
@@ -1163,7 +1354,9 @@
                     manualAtk: '',
                     manualDef: '',
                     isAiming: false,
-                    isAssisted: false
+                    isAssisted: false,
+                    useOvercharge: false,
+                    isStationary: false
                 });
                 setCombatPrompt({ charId: char.id });
             };
@@ -1207,8 +1400,12 @@
                 
                 // Attack Mods
                 let atkMod = 0;
-                if (wModData.effect.includes('+1 to Melee or Ranged')) atkMod += 1;
-                if (wModData.effect.includes('+1 to Ranged') && weaponType === 'ranged') atkMod += 1;
+                const wEffects = wData?.effects || '';
+
+                if (wModData.effect.includes('+1 to hit') && weaponModName !== 'Custom Foregrip') atkMod += 1;
+                if (weaponModName === 'Custom Foregrip' && combatForm.isStationary) atkMod += 1;
+
+                if (wEffects.includes('–1 to Melee attacks') && weaponType === 'melee') atkMod -= 1;
                 if (tData.traits.includes('Low-Profile') && weaponType === 'ranged') atkMod -= 1;
                 
                 if (combatForm.isAiming) atkMod += 2;
@@ -1239,16 +1436,39 @@
                     let damage = 1;
                     
                     const wEffects = wData?.effects || '';
-                    if (wEffects.includes('-1 target DD')) ddMod -= 1;
-                    if (wEffects.includes('-2 target DD')) ddMod -= 2;
-                    if (wEffects.includes('-4 target DD')) ddMod -= 4;
-                    if (wEffects.includes('rolls DD twice')) rollTwice = true;
-                    if (wEffects.includes('Fail=Stun')) damage = 0; 
+                    if (wEffects.includes('–1 to defender’s DD') || wEffects.includes('–1 to target’s DD') || wEffects.includes('-1 Penalty on target’s DD')) ddMod -= 1;
+                    if (wEffects.includes('–2 to defender’s DD')) ddMod -= 2;
+                    if (wEffects.includes('–4 to defender’s DD') || wEffects.includes('–4 to target’s DD')) ddMod -= 4;
+                    if (wEffects.includes('rolls DD twice per attack')) rollTwice = true;
+                    if (wEffects.includes('Fail = target is Stunned')) damage = 0;
                     
                     if (combatForm.isAiming) ddMod -= 2;
                     
                     if (tData.traits.includes('Plated') || tData.traits.includes('Armored')) ddMod += 1;
-                    if (wModData.effect.includes('+1 Damage')) damage += 1;
+
+                    // Shock Baton rule: "Robotic targets suffer –2 to DD"
+                    if (weaponName === 'Shock Baton' && ['Droid', 'Turret', 'C-FRAME', 'Nanite', 'AI'].some(k => target.type?.includes(k))) {
+                        ddMod -= 2;
+                    }
+
+                    if (wModData.effect.includes('+1 damage') && weaponModName !== 'Custom Foregrip') damage += 1;
+                    if (weaponModName === 'Custom Foregrip' && combatForm.isStationary) damage += 1;
+
+                    if (wModData.effect.includes('+1 melee damage') && weaponType === 'melee') damage += 1;
+
+                    if (wModData.effect.includes('+4 damage') && combatForm.useOvercharge) {
+                        damage += 4;
+                        ddMod -= 4;
+                        const cellIndex = char.uItems.findIndex(i => i === 'Power Cell' && !char.live.uItemUsed?.[i]);
+                        if (cellIndex !== -1) {
+                            handleLiveUItemToggle(char.id, cellIndex);
+                            addLog(`${char.name} expended a Power Cell to activate Overcharge Port.`);
+                        }
+                    }
+
+                    if (wModData.effect.includes('–1 target DD') && weaponType === 'melee') {
+                        ddMod -= 1;
+                    }
                     
                     const dd1 = rollDice(1, defSides);
                     const dd2 = rollTwice ? rollDice(1, defSides) : 99;
@@ -1260,7 +1480,10 @@
                     logMsg += ` -> Total: ${finalDD}. `;
                     
                     if (finalAtk > finalDD) {
-                        if (wEffects.includes('Fail=Stun')) {
+                        if (wEffects.includes('DD Fail = Called Effect')) {
+                            logMsg += ` CALLED EFFECT SUCCESS (No Damage): Choose to Knock Prone or Pull target adjacent.`;
+                            addLog(logMsg);
+                        } else if (wEffects.includes('Fail = target is Stunned')) {
                             logMsg += " Target STUNNED.";
                             addLog(logMsg);
                         } else {
@@ -1269,10 +1492,26 @@
                             updateEnemyCount(target.id, -damage);
                         }
                     } else if (finalAtk === finalDD) {
-                        logMsg += " Target STUNNED.";
-                        addLog(logMsg);
+                        if (wEffects.includes('DD Fail = Called Effect')) {
+                            logMsg += ` CALLED EFFECT SUCCESS (No Damage): Choose to Knock Prone or Pull target adjacent.`;
+                            addLog(logMsg);
+                        } else {
+                            logMsg += " Target STUNNED.";
+                            addLog(logMsg);
+                        }
                     } else {
-                        logMsg += " Enemy defended the attack.";
+                        if (weaponName === 'Shock Baton') {
+                            const secondDD = rollDice(1, defSides);
+                            const finalSecondDD = Math.max(1, secondDD + ddMod);
+                            logMsg += ` Enemy defended the attack. SHOCK BATON SECOND DD ROLL: [${secondDD}] (Mod: ${ddMod>0?'+':''}${ddMod}) -> Total: ${finalSecondDD}. `;
+                            if (finalAtk > finalSecondDD || finalAtk === finalSecondDD) {
+                                logMsg += " Target STUNNED by Shock Baton.";
+                            } else {
+                                logMsg += " Target defended the Shock Baton.";
+                            }
+                        } else {
+                            logMsg += " Enemy defended the attack.";
+                        }
                         addLog(logMsg);
                     }
                 }
@@ -1371,10 +1610,13 @@
                     if (target.live.stunned) ddMod -= 2;
                     if (hostileAttackPrompt.isProne) ddMod -= 2;
 
-                    if (wEffects.includes('-1 target DD')) ddMod -= 1;
-                    if (wEffects.includes('-2 target DD')) ddMod -= 2;
-                    if (wEffects.includes('-4 target DD')) ddMod -= 4;
-                    if (wEffects.includes('rolls DD twice')) rollTwice = true;
+                    if (wEffects.includes('–1 to defender’s DD') || wEffects.includes('–1 to target’s DD') || wEffects.includes('-1 Penalty on target’s DD')) ddMod -= 1;
+                    if (wEffects.includes('–2 to defender’s DD')) ddMod -= 2;
+                    if (wEffects.includes('–4 to defender’s DD') || wEffects.includes('–4 to target’s DD')) ddMod -= 4;
+                    if (wEffects.includes('rolls DD twice per attack')) rollTwice = true;
+
+                    const targetMeleeEffects = WEAPONS_MELEE[target.melee]?.effects || '';
+                    if (targetMeleeEffects.includes('+1 to user’s DD')) ddMod += 1;
 
                     // Last Lung check
                     const isHalfAir = aircharge <= (SHIPS[shipClass].aircharge / 2);
@@ -1384,6 +1626,11 @@
 
                     // Armor mods
                     if (target.evaMods.includes('Carbon Fiber Plates')) ddMod += 1;
+
+                    const isStunAttack = wEffects.includes('Fail = target is Stunned') || wEffects.includes('Fail=Stun') || wEffects.includes('Stun') || weaponName === 'Shock Baton';
+                    if (isStunAttack && target.evaMods.includes('Hardened Suit System')) {
+                        ddMod += 1;
+                    }
 
                     const dd1 = rollDice(1, ddSides);
                     const dd2 = rollTwice ? rollDice(1, ddSides) : 99;
@@ -1400,15 +1647,17 @@
                         if (eData.traits.includes('System Shock')) {
                             logMsg += ` SYSTEM SHOCK: ${target.name} takes ${hostileDamage} Wound(s) (Infestation)!`;
                             handleWoundChange(target, Math.min(4, target.wounds + hostileDamage));
-                        } else if (wEffects.includes('Fail=Stun')) {
+                        } else if (wEffects.includes('Fail = target is Stunned')) {
                             logMsg += ` STUNNED: ${target.name} takes a severe shock!`;
                             updateLiveState(target.id, 'stunned', true);
+                        } else if (wEffects.includes('DD Fail = Called Effect')) {
+                            logMsg += ` CALLED EFFECT SUCCESS: Hostile can Knock Prone or Pull target adjacent.`;
                         } else {
                             logMsg += ` INJURY: ${target.name} takes ${hostileDamage} Wound(s)!`;
                             handleWoundChange(target, Math.min(4, target.wounds + hostileDamage));
                         }
                         
-                        if (wEffects.includes('Breach')) {
+                        if (wEffects.includes('Wound causes Suit Breach')) {
                             logMsg += ` SUIT BREACH: ${target.name}'s suit integrity compromised!`;
                             updateCharacter(target.id, 'suitBreaches', target.suitBreaches + 1);
                         }
@@ -1417,7 +1666,19 @@
                             logMsg += ` PINNED: Forced Prone.`;
                         }
                     } else {
-                        logMsg += " DEFENDED.";
+                        if (weaponName === 'Shock Baton') {
+                            const secondDD = rollDice(1, ddSides);
+                            const finalSecondDD = Math.max(1, secondDD + ddMod);
+                            logMsg += ` DEFENDED. SHOCK BATON SECOND DD ROLL: [${secondDD}] (Mod: ${ddMod>0?'+':''}${ddMod}) -> Total: ${finalSecondDD}. `;
+                            if (finalSecondDD < 4) {
+                                logMsg += ` STUNNED: ${target.name} takes a severe shock!`;
+                                updateLiveState(target.id, 'stunned', true);
+                            } else {
+                                logMsg += " DEFENDED the Shock Baton.";
+                            }
+                        } else {
+                            logMsg += " DEFENDED.";
+                        }
                     }
                     
                     addLog(logMsg);
@@ -1487,37 +1748,56 @@
                 let finalRoll = roll1;
                 let logText = parsedVal !== null ? `[Manual Grit: ${roll1}]` : `[Grit: ${roll1}]`;
 
+                let roll2 = null;
                 if (isYarddog && parsedVal === null) {
-                    let roll2 = rollDice(1, sides);
+                    roll2 = rollDice(1, sides);
                     finalRoll = Math.max(roll1, roll2);
                     logText = `[Grit (TDB): ${roll1}, ${roll2} -> ${finalRoll}]`;
                 }
 
+                let isCritSuccess = (isYarddog && roll2 !== null && roll1 === roll2 && finalRoll >= 4);
+                let isCritFumble = (isYarddog && roll2 !== null && roll1 === roll2 && finalRoll < 4);
+
                 updateCharRollInput(char.id, '');
+
+                // Pushing always costs 1 AC
+                setAircharge(prev => Math.max(0, prev - 1));
 
                 if (finalRoll >= 4) {
                     setCrew(prev => prev.map(c => {
                         if (c.id === char.id) {
-                            return { ...c, live: { ...c.live, pushed: true, usedLoad: false, usedFocus: false, usedGrit: false } };
+                            return { ...c, live: { ...c.live, pushed: true, usedMove: false, usedLoad: false, usedFocus: false, usedGrit: false } };
                         }
                         return c;
                     }));
-                    addLog(`Push Action: ${char.name} SUCCESS (-1 AC) ${logText}. Regained Free Move and Full Action Dice Pool.`);
+                    let msg = `Push Action: ${char.name} SUCCESS (-1 AC) ${logText}. Regained Free Move and Full Action Dice Pool.`;
+                    if (isCritSuccess) msg += " CRITICAL SUCCESS! Grit die remains active (not applicable to Push refresh).";
+                    addLog(msg);
                 } else {
+                    let msg = `Push Action: ${char.name} FAILED (-1 AC) ${logText}. Action lost.`;
+                    if (isCritFumble) {
+                        msg += " CRITICAL FUMBLE! Activation ends immediately. -1 additional Aircharge.";
+                        setAircharge(prev => Math.max(0, prev - 1));
+                    }
                     setCrew(prev => prev.map(c => {
                         if (c.id === char.id) {
-                            return { ...c, live: { ...c.live, pushed: true } };
+                            return { ...c, live: { ...c.live, pushed: true, usedMove: isCritFumble ? true : c.live.usedMove, usedLoad: isCritFumble ? true : c.live.usedLoad, usedFocus: isCritFumble ? true : c.live.usedFocus, usedGrit: isCritFumble ? true : c.live.usedGrit } };
                         }
                         return c;
                     }));
-                    addLog(`Push Action: ${char.name} FAILED (-1 AC) ${logText}. Action lost.`);
+                    addLog(msg);
                 }
             };
 
-            const assignGear = (gear, charId) => {
+            const assignGear = (gear, charId, isFromChoicePrompt = false) => {
                 const charIndex = crew.findIndex(c => c.id === charId);
-                if (charIndex === -1) return;
+                if (charIndex === -1) return false;
                 const char = crew[charIndex];
+
+                if (!isFromChoicePrompt && (gear.name.includes('Choice') || gear.name.includes('Random') || gear.name.includes('OR'))) {
+                    setChoicePrompt({ gear, charId });
+                    return false;
+                }
                 
                 let assigned = false;
                 let newChar = { ...char };
@@ -1531,7 +1811,7 @@
                         assigned = true;
                     } else {
                         setModalConfig({ title: "Assignment Failed", message: `${char.name} has no empty utility slots for ${gear.name}.`, onConfirm: () => setModalConfig(null), onCancel: () => setModalConfig(null) });
-                        return;
+                        return false;
                     }
                 } 
                 // Handle EVA Mod assignment
@@ -1542,7 +1822,7 @@
                         assigned = true;
                     } else {
                         setModalConfig({ title: "Assignment Failed", message: `${char.name} cannot equip ${gear.name} (suit limits reached or already equipped).`, onConfirm: () => setModalConfig(null), onCancel: () => setModalConfig(null) });
-                        return;
+                        return false;
                     }
                 } 
                 // Handle Weapon Mod assignment
@@ -1555,7 +1835,7 @@
                         assigned = true;
                     } else {
                         setModalConfig({ title: "Assignment Failed", message: `${char.name} has no empty weapon mod slots for ${gear.name}.`, onConfirm: () => setModalConfig(null), onCancel: () => setModalConfig(null) });
-                        return;
+                        return false;
                     }
                 }
                 // Handle Ranged Weapon assignment
@@ -1565,9 +1845,33 @@
                     
                     if (WEAPONS_RANGED[gear.name].ydOnly && !isYarddog && (!hasRangeTraining || gear.name !== 'Riot Gun')) {
                         setModalConfig({ title: "Assignment Failed", message: `${char.name} is not a Yarddog and cannot equip heavy/restricted weapons like ${gear.name}.`, onConfirm: () => setModalConfig(null), onCancel: () => setModalConfig(null) });
-                        return;
+                        return false;
                     }
                     newChar.ranged = gear.name;
+                    assigned = true;
+                }
+                // Handle EVA Suit assignment from locker
+                else if (gear.type === 'evaSuit') {
+                    // Stash current suit into locker
+                    let oldSuitItemName = newChar.suit;
+                    if (newChar.evaMods && newChar.evaMods.length > 0) {
+                        oldSuitItemName += ` (Mods: ${newChar.evaMods.join(', ')})`;
+                    }
+                    const oldSuitLockerItem = {
+                        id: generateId(),
+                        name: oldSuitItemName,
+                        type: 'evaSuit',
+                        baseSuit: newChar.suit,
+                        evaMods: [...(newChar.evaMods || [])]
+                    };
+
+                    // Assign new suit and mods
+                    newChar.suit = gear.baseSuit;
+                    newChar.evaMods = [...(gear.evaMods || [])];
+
+                    // Enqueue adding the old suit to locker
+                    setCrewLocker(prev => [...prev.filter(g => g.id !== gear.id), oldSuitLockerItem]);
+
                     assigned = true;
                 }
                 // Handle Special rewards that need manual adjustment (Suits, Choices)
@@ -1579,14 +1883,18 @@
                         onCancel: () => setModalConfig(null),
                         confirmText: "Understood"
                     });
-                    return;
+                    return false;
                 }
 
                 if (assigned) {
-                    setLegacyLocker(prev => prev.filter(g => g.id !== gear.id));
+                    if (!isFromChoicePrompt && gear.type !== 'evaSuit') {
+                        setCrewLocker(prev => prev.filter(g => g.id !== gear.id));
+                    }
                     setCrew(prev => prev.map(c => c.id === charId ? newChar : c));
-                    addLog(`Assigned ${gear.name} from Legacy Locker to ${char.name}.`);
+                    addLog(`Assigned ${gear.name} from Crew Locker to ${char.name}.`);
+                    return true;
                 }
+                return false;
             };
 
             const saveHistory = () => {
@@ -1595,10 +1903,12 @@
                     phase,
                     aircharge,
                     playLog: [...playLog],
+                    rolledSiteConditions: [...rolledSiteConditions],
                     pressureBuilding,
                     hitchSkips,
                     nextMhuHazardClear,
                     nextMhuHitchMinus1,
+                    nextMhuHitchPlus1,
                     nextMhuHitchHullShift,
                     nextMhuHitchPrime,
                     crewBuffs: [...crewBuffs],
@@ -1667,7 +1977,7 @@
                         addLog(`All unique objectives for Level ${missionLevel} have already been identified.`);
                         return;
                     }
-                    randomKey = availableKeys[Math.floor(Math.random() * availableKeys.length)];
+                    randomKey = availableKeys[Math.floor(getSecureRandom() * availableKeys.length)];
                 }
 
                 const newObjText = levelObjectives[randomKey];
@@ -1778,7 +2088,7 @@
                     // Interactive POI Payouts
                     if (obj.type === 'poi_L1_1') {
                         const r = rollDice(1,6);
-                        if (r >= 6) sAdd = rollDice(2,4); else if (r >= 4) sAdd = rollDice(1,4);
+                        if (r === 6) sAdd = rollDice(2,4); else if (r >= 4) sAdd = rollDice(1,4);
                         special = sAdd > 0 ? "Salvage Found in Lockers." : "Lockers Empty.";
                     } else if (obj.type === 'poi_L1_2') {
                         gear.push('Utility Choice', 'Utility Choice'); aAdd += 1; sAdd = rollDice(1,4);
@@ -1840,10 +2150,10 @@
                     if (sAdd > 0) setSalvage(prev => prev + sAdd);
                     if (aAdd > 0) setAircharge(prev => prev + aAdd);
                     if (gear.length > 0) {
-                        setLegacyLocker(prev => [...prev, ...gear.map(g => ({ name: g, type: (g.includes('Suit') || g.includes('Choice') || g.includes('OR')) ? 'special' : 'uItem', id: generateId() }))]);
+                        setCrewLocker(prev => [...prev, ...gear.map(g => ({ name: g, type: (g.includes('Suit') || g.includes('Choice') || g.includes('OR')) ? 'special' : 'uItem', id: generateId() }))]);
                     }
 
-                    let logMsg = `${isObj ? 'Objective Completed' : 'POI Resolved'} by ${actorStr}: ${obj.text.split('(')[0].trim()}. `;
+                    let logMsg = `${isObj ? 'Objective Completed' : 'POI Resolved'} by ${actorStr}: ${obj.text.split('.')[0].trim()}. `;
                     let rewards = [];
                     if (sAdd > 0) rewards.push(`+${sAdd} Salvage`);
                     if (aAdd > 0) rewards.push(`+${aAdd} Aircharge`);
@@ -1880,7 +2190,7 @@
                     } else if (obj.type === 'poi_L2_4' || obj.type === 'poi_L3_2') {
                         setAircharge(a => Math.max(0, a-1)); consequence = "-1 Aircharge.";
                     } else if (obj.type === 'poi_L2_5') {
-                        setNextMhuHitchMinus1(true); consequence = "Alarm Triggered (+1 to next Hitch roll).";
+                        setNextMhuHitchPlus1(true); consequence = "Alarm Triggered (+1 to next Hitch roll).";
                     } else if (obj.type === 'poi_L2_7') {
                         consequence = "Actor loses 1 carried Utility Item (Manually remove from roster).";
                     } else if (obj.type === 'poi_L2_8') {
@@ -1888,16 +2198,16 @@
                     } else if (obj.type === 'poi_L3_3') {
                         setPendingPenaltyPrompt({ type: 'wound', amount: 1, reason: 'Failed Primary Power Core (Shock Risk)' }); consequence = "Pending Wound selection.";
                     } else if (obj.type === 'poi_L3_4') {
-                        setNextMhuHitchHullShift(true); consequence = "Next Hitch will automatically result in Hull Shift.";
+                        setNextMhuHitchHullShift(true); consequence = "Next Hitch Phase automatically results in Hull Shift.";
                     } else if (obj.type === 'poi_L3_5') {
-                        setNextMhuHitchPrime(true); consequence = "Next Hitch rerolled to Hostile w/ Prime.";
+                        setNextMhuHitchPrime(true); consequence = "Next Hitch reroll until Hostile generated, includes Prime.";
                     } else if (obj.type === 'poi_L3_7') {
                         updateLiveState(actor.id, 'usedGrit', true); consequence = `${actor.name} loses their Grit die for their next activation.`;
                     } else if (obj.type === 'poi_L3_8') {
-                        rollHitch(manualRolls.hitch); consequence = "Immediate Hitch rolled.";
+                        rollHitch(manualRolls.hitch); consequence = "Immediate Hitch roll.";
                     }
 
-                    addLog(`${isObj ? 'Objective' : 'POI'} FAILED by ${actorStr}: ${obj.text.split('(')[0].trim()}. ${consequence}`);
+                    addLog(`${isObj ? 'Objective' : 'POI'} FAILED by ${actorStr}: ${obj.text.split('.')[0].trim()}. ${consequence}`);
                 }
                 
                 setObjectivePrompt(null);
@@ -1927,7 +2237,7 @@
 
                 setSalvage(prev => prev + gainedSalvage);
                 if (gainedGear) {
-                    setLegacyLocker(prev => [...prev, { ...gainedGear, id: generateId() }]);
+                    setCrewLocker(prev => [...prev, { ...gainedGear, id: generateId() }]);
                 }
                 
                 if (!silent) addLog(`${actorPrefix}${resultText}`);
@@ -1944,32 +2254,32 @@
                 let logMsg = `${actorPrefix}Identified POI (Level ${missionLevel}) [${manualRollStr ? 'Manual Roll' : 'Roll'}: ${roll}]: `;
                 
                 if (missionLevel === 1) {
-                    if (roll === 1) poiObj = { text: 'Sealed Locker Bank (Access: Break/Brace)', type: 'poi_L1_1' };
-                    if (roll === 2) poiObj = { text: 'Supply Crate (Access: Break/Brace)', type: 'poi_L1_2' };
-                    if (roll === 3) poiObj = { text: 'Power Relay Cabinet (Access: Scan/Hack)', type: 'poi_L1_3' };
-                    if (roll === 4) poiObj = { text: 'Emergency Aid Cabinet (Access: Break/Brace)', type: 'poi_L1_4' };
-                    if (roll === 5) poiObj = { text: 'Security Locker (Access: Scan/Hack)', type: 'poi_L1_5' };
-                    if (roll === 6) poiObj = { text: 'Maintenance Supply Cabinet (Access: Break/Brace)', type: 'poi_L1_6' };
-                    if (roll === 7) poiObj = { text: 'Data Node (Access: Scan/Hack)', type: 'poi_L1_7' };
-                    if (roll === 8) poiObj = { text: 'Support System Terminal (Access: Break/Brace)', type: 'poi_L1_8' };
+                    if (roll === 1) poiObj = { text: 'Sealed Locker Bank. Rusted personal lockers lining the wall. (Access: Break/Brace)', type: 'poi_L1_1' };
+                    if (roll === 2) poiObj = { text: 'Supply Crate (Strapped Down). Heavy-duty cargo box chained to deck. (Access: Break/Brace)', type: 'poi_L1_2' };
+                    if (roll === 3) poiObj = { text: 'Power Relay Cabinet. Sparking cables, still humming faintly. (Access: Scan/Hack)', type: 'poi_L1_3' };
+                    if (roll === 4) poiObj = { text: 'Emergency Aid Cabinet. Half-buried beneath fallen ductwork. (Access: Break/Brace)', type: 'poi_L1_4' };
+                    if (roll === 5) poiObj = { text: 'Security Locker. Access plate stenciled “SECURITY.” E-Lock blinking red. (Access: Scan/Hack)', type: 'poi_L1_5' };
+                    if (roll === 6) poiObj = { text: 'Maintenance Supply Cabinet. Small access panel with E-Lock. Marked “TOOLS AND PARTS.” (Access: Break/Brace)', type: 'poi_L1_6' };
+                    if (roll === 7) poiObj = { text: 'Data Node. Hidden cache log—coordinates to unlisted cargo. (Access: Scan/Hack)', type: 'poi_L1_7' };
+                    if (roll === 8) poiObj = { text: 'Support System Terminal. Cover panel crumpled and jammed shut. (Access: Break/Brace)', type: 'poi_L1_8' };
                 } else if (missionLevel === 2) {
-                    if (roll === 1) poiObj = { text: 'Collapsed Locker Run (Access: Break/Brace)', type: 'poi_L2_1' };
-                    if (roll === 2) poiObj = { text: 'Reinforced Supply Crate (Access: Break/Brace)', type: 'poi_L2_2' };
-                    if (roll === 3) poiObj = { text: 'Auxiliary Power Junction (Access: Scan/Hack)', type: 'poi_L2_3' };
-                    if (roll === 4) poiObj = { text: 'Emergency Medical Cache (Access: Break/Brace)', type: 'poi_L2_4' };
-                    if (roll === 5) poiObj = { text: 'Security Equipment Locker (Access: Scan/Hack)', type: 'poi_L2_5' };
-                    if (roll === 6) poiObj = { text: 'Maintenance Spares Cabinet (Access: Break/Brace OR Scan/Hack)', type: 'poi_L2_6' };
-                    if (roll === 7) poiObj = { text: 'Encrypted Data Node (Access: Scan/Hack)', type: 'poi_L2_7' };
-                    if (roll === 8) poiObj = { text: 'Life Support Control Console (Access: Break/Brace)', type: 'poi_L2_8' };
+                    if (roll === 1) poiObj = { text: 'Collapsed Locker Run. Crushed personal lockers fused by hull deformation. (Access: Break/Brace)', type: 'poi_L2_1' };
+                    if (roll === 2) poiObj = { text: 'Reinforced Supply Crate. Cargo crate secured with physical clamps and a deadlock collar. (Access: Break/Brace)', type: 'poi_L2_2' };
+                    if (roll === 3) poiObj = { text: 'Auxiliary Power Junction. Active subsystem bleeding residual current. (Access: Scan/Hack)', type: 'poi_L2_3' };
+                    if (roll === 4) poiObj = { text: 'Emergency Medical Cache. Wall unit pinned under twisted struts. (Access: Break/Brace)', type: 'poi_L2_4' };
+                    if (roll === 5) poiObj = { text: 'Security Equipment Locker. Lockdown housing with live sensor loop. (Access: Scan/Hack)', type: 'poi_L2_5' };
+                    if (roll === 6) poiObj = { text: 'Maintenance Spares Cabinet. Heavy panel with redundant locking pins. (Access: Break/Brace or Scan/Hack)', type: 'poi_L2_6' };
+                    if (roll === 7) poiObj = { text: 'Encrypted Data Node. Black-box memory core behind a scorched terminal. (Access: Scan/Hack)', type: 'poi_L2_7' };
+                    if (roll === 8) poiObj = { text: 'Life Support Control Console. Buckled control panel still tied into the section. (Access: Break/Brace)', type: 'poi_L2_8' };
                 } else if (missionLevel === 3) {
-                    if (roll === 1) poiObj = { text: 'Fused Locker Vault (Access: Scan/Hack AND Break/Brace)', type: 'poi_L3_1' };
-                    if (roll === 2) poiObj = { text: 'Hazard-Sealed Supply Pod (Access: Scan/Hack THEN Break/Brace)', type: 'poi_L3_2' };
-                    if (roll === 3) poiObj = { text: 'Primary Power Core Access (Access: Scan/Hack)', type: 'poi_L3_3' };
-                    if (roll === 4) poiObj = { text: 'Trauma Response Cache (Access: Break/Brace)', type: 'poi_L3_4' };
-                    if (roll === 5) poiObj = { text: 'Armory Lockframe (Access: Scan/Hack AND Break/Brace)', type: 'poi_L3_5' };
-                    if (roll === 6) poiObj = { text: 'Fabrication Materials Locker (Access: Break/Brace OR Scan/Hack)', type: 'poi_L3_6' };
-                    if (roll === 7) poiObj = { text: 'Deep Memory Archive (Access: Scan/Hack)', type: 'poi_L3_7' };
-                    if (roll === 8) poiObj = { text: 'Environmental Control Nexus (Access: Break/Brace)', type: 'poi_L3_8' };
+                    if (roll === 1) poiObj = { text: 'Fused Locker Vault. Lockers welded shut by heat and pressure. (Access: Scan/Hack and Break/Brace)', type: 'poi_L3_1' };
+                    if (roll === 2) poiObj = { text: 'Hazard-Sealed Supply Pod. Armored crate with biometric clamp and power interlock. (Access: Scan/Hack → Break/Brace)', type: 'poi_L3_2' };
+                    if (roll === 3) poiObj = { text: 'Primary Power Core Access. Live conduit cluster feeding multiple systems. (Access: Scan/Hack)', type: 'poi_L3_3' };
+                    if (roll === 4) poiObj = { text: 'Trauma Response Cache. Emergency station crushed into the deck. (Access: Break/Brace)', type: 'poi_L3_4' };
+                    if (roll === 5) poiObj = { text: 'Armory Lockframe. Military-grade security housing. (Access: Scan/Hack and Break/Brace)', type: 'poi_L3_5' };
+                    if (roll === 6) poiObj = { text: 'Fabrication Materials Locker. Dense components fused into storage rails. (Access: Break/Brace or Scan/Hack)', type: 'poi_L3_6' };
+                    if (roll === 7) poiObj = { text: 'Deep Memory Archive. Fragmented AI core behind corrupted logic gates. (Access: Scan/Hack)', type: 'poi_L3_7' };
+                    if (roll === 8) poiObj = { text: 'Environmental Control Nexus. Section-wide systems hub under heavy damage. (Access: Break/Brace)', type: 'poi_L3_8' };
                 }
 
                 if (poiObj) {
@@ -2006,10 +2316,24 @@
                     addLog(`Quiet Pull SUCCESS by ${actorStr}: ${activeQuietPull.name}. Reward: ${activeQuietPull.reward}`);
                     
                     if (activeQuietPull.roll === 1) setSalvage(s => s + rollDice(2,4));
-                    if (activeQuietPull.roll === 2) setSalvage(s => s + rollDice(1,4));
-                    if (activeQuietPull.roll === 3) setLegacyLocker(p=>[...p, {name: getRandomItem('uItem'), type: 'uItem', id: generateId()}]);
-                    if (activeQuietPull.roll === 4) setSalvage(s => s + rollDice(1,4));
-                    
+                    if (activeQuietPull.roll === 2) {
+                        setSalvage(s => s + rollDice(1,4));
+                        addLog("The next POI this MHU opens with a simple Interact/Use action.");
+                    }
+                    if (activeQuietPull.roll === 3) {
+                        setCrewLocker(p=>[...p, {name: 'Utility Choice', type: 'special', id: generateId()}]);
+                        addLog("Ignore the next forced Aircharge loss.");
+                    }
+                    if (activeQuietPull.roll === 4) {
+                        setSalvage(s => s + rollDice(1,4));
+                        addLog("The next Hitch spawns Hostiles from one corner only.");
+                    }
+                    if (activeQuietPull.roll === 5) {
+                        addLog("Next Hitch is downgraded (One corner spawn or cosmetic hazard).");
+                    }
+                    if (activeQuietPull.roll === 6) {
+                        addLog("The next sealed POI opens automatically upon identification.");
+                    }
                     if (activeQuietPull.roll === 7) {
                         setPendingChoices(p => [...p, { id: generateId(), type: 'qp7', source: activeQuietPull.name }]);
                     }
@@ -2020,14 +2344,30 @@
                     addLog(`Quiet Pull FAILED by ${actorStr}: ${activeQuietPull.name}. Consequence: ${activeQuietPull.fail}`);
                     setTraces(t => t + 1);
                     addLog(`+1 Trace added to Crew Record.`);
+
+                    if (activeQuietPull.roll === 1) {
+                        addLog("Rolling Immediate Hitch due to Quiet Pull failure...");
+                        rollHitch(missionLevel, false);
+                    }
                     if (activeQuietPull.roll === 3) setAircharge(a => Math.max(0, a - 1));
+                    if (activeQuietPull.roll === 4) {
+                        addLog("Maintenance Drones will replace the next Hitch.");
+                        // We could build a complex override system, but logging and letting players handle it mechanically is acceptable,
+                        // or we can manually enforce it by spawning them immediately or at the next hitch.
+                        // For simplicity without adding massive state complexity for a specific enemy,
+                        // we'll instruct the player.
+                    }
+                    if (activeQuietPull.roll === 5) setNextMhuHitchPlus1(true);
+                    if (activeQuietPull.roll === 7) {
+                        addLog("Claim-jumpers noticed. Spawn D6 Raiders at the next Hitch.");
+                    }
                 }
                 setActiveQuietPull(null);
             };
 
             const getDeploymentText = () => {
-                const d1 = Math.floor(Math.random() * 4) + 1;
-                const d2 = Math.floor(Math.random() * 4) + 1;
+                const d1 = Math.floor(getSecureRandom() * 4) + 1;
+                const d2 = Math.floor(getSecureRandom() * 4) + 1;
                 if (d1 === d2) return `Corner ${d1} (x4 models)`;
                 return `Corner ${d1} (x2 models), Corner ${d2} (x2 models)`;
             };
@@ -2039,47 +2379,47 @@
 
                 if (lvl === 1) {
                     if (rollVal === 1) { text = "All Clear. No Hazards or Hostiles this turn."; }
-                    else if (rollVal === 2) { text = "Arcs and Sparks. Risk Stun when entering or moving."; addHazard('Arcs and Sparks'); }
-                    else if (rollVal === 3) { text = "Power Loss. MHU goes dark. Darkness penalties apply."; addHazard('Power Loss'); }
-                    else if (rollVal === 4) { text = "Ghosts in the Alloy. All Scrapjacks roll Grit -1."; addHazard('Ghosts in the Alloy'); }
-                    else if (rollVal === 5) { text = "Toxic Fumes. One tile affected. LOS reduced."; addHazard('Toxic Fumes'); }
+                    else if (rollVal === 2) { text = "Arcs and Sparks. Electrical discharge. Scrapjacks risk Stun when entering or moving this turn."; addHazard('Arcs and Sparks'); }
+                    else if (rollVal === 3) { text = "Power Loss. MHU goes dark. Darkness penalties apply until end of Hitch Phase."; addHazard('Power Loss'); }
+                    else if (rollVal === 4) { text = "Ghosts in the Alloy. All Scrapjacks roll Grit –1. Fail: lose Grit die next activation."; addHazard('Ghosts in the Alloy'); }
+                    else if (rollVal === 5) { text = "Toxic Fumes. One tile affected. LOS reduced. Resolve as standard Toxic Fumes Hazard."; addHazard('Toxic Fumes'); }
                     else if (rollVal === 6) { text = "Void Rats (Ghost Step). Spawn normally."; spawnedEnemy = 'Void Rats'; pCheck = true; }
                     else if (rollVal === 7) { text = "Small Maintenance Droids (Fast-Mover). Spawn normally."; spawnedEnemy = 'Small Maintenance Droids'; pCheck = true; }
                     else if (rollVal === 8) { text = "Infested Crew (Frenzied). Spawn normally."; spawnedEnemy = 'Infested Crew'; pCheck = true; }
                     else if (rollVal === 9) { text = "Hull Shift. All Scrapjacks roll DD. Fail: suffer 1 Wound."; addHazard('Hull Shift'); }
-                    else if (rollVal === 10) { text = "Pressure Building. No immediate effect. Next Hitch uses Level II table."; }
+                    else if (rollVal === 10) { text = "Pressure Building. No immediate effect. Next Hitch roll uses Level II table."; }
                 } else if (lvl === 2) {
                     if (rollVal === 1) {
-                        const subRoll = Math.floor(Math.random() * 6) + 1;
+                        const subRoll = Math.floor(getSecureRandom() * 6) + 1;
                         if (subRoll <= 3) { text = "Uneasy Silence -> Raiders spawn (Cull Protocol)."; spawnedEnemy = 'Raiders'; pCheck = true; }
                         else { text = "Uneasy Silence -> All Clear."; }
                     }
-                    else if (rollVal === 2) { text = "Arcs and Sparks. Risk Stun this turn."; addHazard('Arcs and Sparks'); }
-                    else if (rollVal === 3) { text = "Radiation Spike. All Scrapjacks roll Focus -1."; addHazard('Radiation Spike'); }
-                    else if (rollVal === 4) { text = "Hull Breach. Roll D4 for quadrant."; addHazard('Hull Breach'); }
+                    else if (rollVal === 2) { text = "Arcs and Sparks. Electrical discharge. Risk Stun this turn."; addHazard('Arcs and Sparks'); }
+                    else if (rollVal === 3) { text = "Radiation Spike. All Scrapjacks roll Focus –1. Fail: lose Focus die next activation."; addHazard('Radiation Spike'); }
+                    else if (rollVal === 4) { text = "Hull Breach. Roll D4 for quadrant. Damage at center (or nearest). Scrapjacks roll Load –1 or move 3″ toward breach."; addHazard('Hull Breach'); }
                     else if (rollVal === 5) { text = "Pirates (Low-Profile). Spawn normally."; spawnedEnemy = 'Pirates'; pCheck = true; }
                     else if (rollVal === 6) { text = "Small Security Droids (Double-Tap). Spawn and activate immediately."; spawnedEnemy = 'Small Security Droids'; pCheck = true; }
                     else if (rollVal === 7) { text = "Nanite Swarm (System Shock). Spawn normally."; spawnedEnemy = 'Nanite Swarm'; pCheck = true; }
-                    else if (rollVal === 8) { text = "Large Maintenance Droids (Heavy Hit). Spawn normally."; spawnedEnemy = 'Large Maintenance Droids'; pCheck = true; }
+                    else if (rollVal === 8) { text = "Large Maintenance Droid (Heavy Hit). Spawn normally."; spawnedEnemy = 'Large Maintenance Droids'; pCheck = true; }
                     else if (rollVal === 9) { text = "Small Xeno Types (First Contact). Spawn normally."; spawnedEnemy = 'Small Xeno Types'; pCheck = true; }
-                    else if (rollVal === 10) { text = "Toxic Fumes. LOS reduced to 6 inches."; addHazard('Toxic Fumes'); }
+                    else if (rollVal === 10) { text = "Toxic Fumes. LOS reduced to 6″. Scrapjacks roll Resist (Grit) or lose 1 Aircharge."; addHazard('Toxic Fumes'); }
                 } else if (lvl === 3) {
-                    if (rollVal === 1) { text = "She's Breaking Up. Resolve Hull Shift and Arcs and Sparks."; addHazard('Hull Shift'); addHazard('Arcs and Sparks'); }
-                    else if (rollVal === 2) { text = "Double Hull Breach. Two quadrants lose pressure."; addHazard('Hull Breach'); addHazard('Double Hull Breach'); }
-                    else if (rollVal === 3) { text = "Total Power Loss. MHU goes dark until end of next activation."; addHazard('Total Power Loss'); }
+                    if (rollVal === 1) { text = "She's Breaking Up. Resolve Hull Shift and Arcs and Sparks simultaneously."; addHazard('Hull Shift'); addHazard('Arcs and Sparks'); }
+                    else if (rollVal === 2) { text = "Double Hull Breach. Two quadrants lose pressure. Resolve as two Hull Breach effects."; addHazard('Hull Breach'); addHazard('Double Hull Breach'); }
+                    else if (rollVal === 3) { text = "Total Power Loss. MHU goes dark until end of the next activation."; addHazard('Total Power Loss'); }
                     else if (rollVal === 4) { text = "Large Security Droids (Plated, Double-Tap). Spawn normally."; spawnedEnemy = 'Large Security Droids'; pCheck = true; }
                     else if (rollVal === 5) { text = "VRG Compliance Team (Low-Profile, Pinning Fire). Spawn normally."; spawnedEnemy = 'VRG Compliance Team'; pCheck = true; }
                     else if (rollVal === 6) { text = "Bio-Asset (Frenzied, Cull Protocol). Spawn normally."; spawnedEnemy = 'Bio-Asset'; pCheck = true; }
-                    else if (rollVal === 7) { text = "C-FRAME Combat Units (Redundant Core, Hardwired). Spawn and activate immediately."; spawnedEnemy = 'C-FRAME Combat Units'; pCheck = true; }
-                    else if (rollVal === 8) { text = "Radiation Spike + Toxic Fumes. Both Hazards apply simultaneously."; addHazard('Radiation Spike'); addHazard('Toxic Fumes'); }
-                    else if (rollVal === 9) { text = "Large Xeno Types (Reach). Spawn normally."; spawnedEnemy = 'Large Xeno Types'; pCheck = true; }
-                    else if (rollVal === 10) { text = "Everything Breaks. Resolving twice..."; }
+                    else if (rollVal === 7) { text = "C-FRAME Combat Units (Redundant Core, Self-Sealing). Spawn and activate immediately."; spawnedEnemy = 'C-FRAME Combat Units'; pCheck = true; }
+                    else if (rollVal === 8) { text = "Radiation Spike + Toxic Fumes. Both Hazards apply simultaneously in the MHU."; addHazard('Radiation Spike'); addHazard('Toxic Fumes'); }
+                    else if (rollVal === 9) { text = "Large Xeno Types (Reach, Frenzied). Spawn normally."; spawnedEnemy = 'Large Xeno Types'; pCheck = true; }
+                    else if (rollVal === 10) { text = "Everything Breaks. Roll twice on this table. Resolve both results."; }
                 }
 
                 if (spawnedEnemy) {
                     const deployText = getDeploymentText();
                     if (isPrimeChecked && pCheck) {
-                        const primeRoll = Math.floor(Math.random() * 6) + 1;
+                        const primeRoll = Math.floor(getSecureRandom() * 6) + 1;
                         if (primeRoll <= 3 || nextMhuHitchPrime) {
                             text += ` -> [Prime Check: ${primeRoll}] [PRIME SPAWNS!] [Deploy: ${deployText}]`;
                             let primeType = `Prime (${spawnedEnemy})`;
@@ -2113,21 +2453,34 @@
                     roll = Math.max(1, roll - 1);
                     logPrefix = `Hitch (Level ${missionLevel}) [${manualRollStr ? 'Manual Roll' : 'Roll'}: ${roll} (-1 Objective Buff applied)]: `;
                     setNextMhuHitchMinus1(false);
-                } else if (nextMhuHitchHullShift) {
-                    logPrefix = `Hitch (Level ${missionLevel}) [Forced Consequence]: `;
-                    setNextMhuHitchHullShift(false);
-                    addLog(logPrefix + "Hull Shift. All Scrapjacks roll DD. Fail: suffer 1 Wound.");
-                    addHazard('Hull Shift');
-                    return;
+                } else if (nextMhuHitchPlus1) {
+                    roll = Math.min(10, roll + 1);
+                    logPrefix = `Hitch (Level ${missionLevel}) [${manualRollStr ? 'Manual Roll' : 'Roll'}: ${roll} (+1 Alarm Penalty applied)]: `;
+                    setNextMhuHitchPlus1(false);
                 } else {
                     logPrefix = `Hitch (Level ${missionLevel}) [${manualRollStr ? 'Manual Roll' : 'Roll'}: ${roll}]: `;
                 }
 
                 let text = logPrefix;
-                
-                if (roll === 10 && effectiveLevel === 3) {
-                    const r1 = Math.floor(Math.random() * 9) + 1; 
-                    const r2 = Math.floor(Math.random() * 9) + 1;
+
+                if (nextMhuHitchHullShift) {
+                    setNextMhuHitchHullShift(false);
+                    text = `Hitch (Level ${missionLevel}) [Forced Consequence]: Hull Shift. All Scrapjacks roll DD. Fail: suffer 1 Wound.`;
+                    addHazard('Hull Shift');
+                } else if (nextMhuHitchPrime) {
+                    // Re-roll until Hostile result (for L3 this means a roll that spawns a Hostile)
+                    let forcedRoll = roll;
+                    if (!manualRollStr) {
+                        const hostileRolls = [4, 5, 6, 7, 9]; // Level 3 hostile spawns
+                        while (!hostileRolls.includes(forcedRoll)) {
+                            forcedRoll = Math.floor(getSecureRandom() * 10) + 1;
+                        }
+                    }
+                    text = `Hitch (Level ${missionLevel}) [Forced Hostile w/ Prime]: `;
+                    text += processHitchEvent(effectiveLevel, forcedRoll);
+                } else if (roll === 10 && effectiveLevel === 3) {
+                    const r1 = Math.floor(getSecureRandom() * 9) + 1;
+                    const r2 = Math.floor(getSecureRandom() * 9) + 1;
                     text += `EVERYTHING BREAKS! -> Result 1: ${processHitchEvent(effectiveLevel, r1)} AND Result 2: ${processHitchEvent(effectiveLevel, r2)}`;
                 } else {
                     text += processHitchEvent(effectiveLevel, roll);
@@ -2145,14 +2498,17 @@
                 saveHistory();
 
                 if (phase === 'Breach') {
-                    if (turn === 1) rollSiteCondition(manualRolls.site);
+                    if (!rolledSiteConditions.includes(missionLevel)) {
+                        rollSiteCondition(manualRolls.site);
+                        setRolledSiteConditions(prev => [...prev, missionLevel]);
+                    }
                     rollBreach(manualRolls.hazard);
                     rollObjective(manualRolls.objective);
                     setManualRolls(p => ({...p, site: '', hazard: '', objective: ''}));
                     setPhase('Sweep');
                     setCrew(prev => prev.map(c => ({
                         ...c,
-                        live: { ...c.live, usedLoad: false, usedFocus: false, usedGrit: false, pushed: false, stunned: false }
+                        live: { ...c.live, usedMove: false, usedLoad: false, usedFocus: false, usedGrit: false, pushed: false, stunned: false }
                     })));
                     addLog(`Phase advanced to: Sweep (Breach executed). Action Dice refreshed.`);
                 } else {
@@ -2166,7 +2522,7 @@
                     } else if (nextPhase === 'Sweep') {
                         setCrew(prev => prev.map(c => ({
                             ...c,
-                            live: { ...c.live, usedLoad: false, usedFocus: false, usedGrit: false, pushed: false, stunned: false }
+                            live: { ...c.live, usedMove: false, usedLoad: false, usedFocus: false, usedGrit: false, pushed: false, stunned: false }
                         })));
                         addLog(`Action Dice refreshed.`);
                     }
@@ -2210,7 +2566,7 @@
                 // Refresh all spent Action Dice
                 setCrew(prev => prev.map(c => ({
                     ...c,
-                    live: { ...c.live, usedLoad: false, usedFocus: false, usedGrit: false, pushed: false }
+                    live: { ...c.live, usedMove: false, usedLoad: false, usedFocus: false, usedGrit: false, pushed: false }
                 })));
                 
                 setActiveEnemies([]);
@@ -2235,10 +2591,12 @@
                 setHitchSkips(turnHistory.hitchSkips || 0);
                 setNextMhuHazardClear(turnHistory.nextMhuHazardClear || false);
                 setNextMhuHitchMinus1(turnHistory.nextMhuHitchMinus1 || false);
+                setNextMhuHitchPlus1(turnHistory.nextMhuHitchPlus1 || false);
                 setNextMhuHitchHullShift(turnHistory.nextMhuHitchHullShift || false);
                 setNextMhuHitchPrime(turnHistory.nextMhuHitchPrime || false);
                 setCrewBuffs(turnHistory.crewBuffs || []);
                 setPlayLog([`[Turn ${turnHistory.turn} - ${turnHistory.phase}] Undo: Reverted last action.`, ...turnHistory.playLog]);
+                if(turnHistory.rolledSiteConditions) setRolledSiteConditions([...turnHistory.rolledSiteConditions]);
                 setCrew(turnHistory.crew);
                 setActiveEnemies(turnHistory.activeEnemies || []);
                 setActiveHazards(turnHistory.activeHazards || []);
@@ -2252,6 +2610,7 @@
                 setTurn(1);
                 setPhase('Breach');
                 setMissionLevel(1);
+                setRolledSiteConditions([]);
                 setAircharge(SHIPS[shipClass].aircharge);
                 setSalvage(0);
                 setAcrDebt(SHIPS[shipClass].acr);
@@ -2277,7 +2636,7 @@
                     stress: 0,
                     suitBreaches: 0,
                     status: 'Active',
-                    live: { usedLoad: false, usedFocus: false, usedGrit: false, uItemUsed: Array(6).fill(false), pushed: false, stunned: false }
+                    live: { usedMove: false, usedLoad: false, usedFocus: false, usedGrit: false, uItemUsed: Array(6).fill(false), pushed: false, stunned: false }
                 })));
             };
 
@@ -2300,11 +2659,11 @@
                 setAircharge(SHIPS['Class C - Tug'].aircharge);
                 setCrewName(getRandomCrewName());
                 setCrew(generateInitialCrew('Class C - Tug'));
-                setLegacyLocker([]);
+                setCrewLocker([]);
                 setJobCount(1);
                 setCampaignLog([]);
                 setTraces(0);
-                setShipUpgrades([]);
+                // setShipUpgrades([]);
                 setActiveContract(null);
                 setCleanExitGoal(500);
                 setTurn(1);
@@ -2312,6 +2671,7 @@
                 setPlayLog([]);
                 setTurnHistory(null);
                 setMissionLevel(1);
+                setRolledSiteConditions([]);
                 setActiveObjectives([]);
                 setActiveQuietPull(null);
                 setPressureBuilding(false);
@@ -2344,15 +2704,15 @@
 
             // Campaign Helpers
             const generateContract = (type) => {
-                const sizeRoll = Math.floor(Math.random() * 3) + 1;
+                const sizeRoll = Math.floor(getSecureRandom() * 3) + 1;
                 const sizeText = sizeRoll === 1 ? 'Small (1-3 MHU)' : sizeRoll === 2 ? 'Medium (4-6 MHU)' : 'Large (7-9 MHU)';
-                const comp = CONTRACT_COMPLICATIONS[Math.floor(Math.random() * CONTRACT_COMPLICATIONS.length)];
+                const comp = CONTRACT_COMPLICATIONS[Math.floor(getSecureRandom() * CONTRACT_COMPLICATIONS.length)];
                 
                 let target = "";
                 if (type === 'PO') {
-                    target = CONTRACT_TARGETS[Math.floor(Math.random() * CONTRACT_TARGETS.length)];
+                    target = CONTRACT_TARGETS[Math.floor(getSecureRandom() * CONTRACT_TARGETS.length)];
                 } else {
-                    target = OFF_CONTRACT_TARGETS[Math.floor(Math.random() * OFF_CONTRACT_TARGETS.length)];
+                    target = OFF_CONTRACT_TARGETS[Math.floor(getSecureRandom() * OFF_CONTRACT_TARGETS.length)];
                 }
                 
                 setActiveContract({ type, size: sizeText, target, complications: comp });
@@ -2382,23 +2742,23 @@
                     if (crew.length > 0) {
                         const aliveCrew = crew.filter(c => c.wounds < 4 && c.status === 'Active');
                         const targetPool = aliveCrew.length > 0 ? aliveCrew : crew;
-                        const randomChar = targetPool[Math.floor(Math.random() * targetPool.length)];
+                        const randomChar = targetPool[Math.floor(getSecureRandom() * targetPool.length)];
                         const availableScars = SCARS.filter(s => !randomChar.scars.includes(s));
-                        scarName = availableScars.length > 0 ? availableScars[Math.floor(Math.random() * availableScars.length)] : SCARS[0];
+                        scarName = availableScars.length > 0 ? availableScars[Math.floor(getSecureRandom() * availableScars.length)] : SCARS[0];
                         
                         updateCharacter(randomChar.id, 'addScar', scarName);
                         randomName = randomChar.name;
                     }
                     auditText += `[ENFORCEMENT AUDIT]: Lose ${lost} Salvage. +1 ACR next job. ${randomName} suffers random Scar: ${scarName}.`;
                 } else {
-                    const itemsLost = Math.min(legacyLocker.length, Math.floor(Math.random() * 4) + 1);
-                    let newLocker = [...legacyLocker];
+                    const itemsLost = Math.min(crewLocker.length, Math.floor(getSecureRandom() * 4) + 1);
+                    let newLocker = [...crewLocker];
                     for(let i=0; i<itemsLost; i++) {
-                        const idx = Math.floor(Math.random() * newLocker.length);
+                        const idx = Math.floor(getSecureRandom() * newLocker.length);
                         newLocker.splice(idx, 1);
                     }
-                    setLegacyLocker(newLocker);
-                    auditText += `[FULL LOCKDOWN]: Lose ALL Salvage. Next job must be PO. Automatic Audit follows. ${itemsLost} items seized from Legacy Locker.`;
+                    setCrewLocker(newLocker);
+                    auditText += `[FULL LOCKDOWN]: Lose ALL Salvage. Next job must be PO. Automatic Audit follows. ${itemsLost} items seized from Crew Locker.`;
                     setSalvage(0);
                 }
 
@@ -2582,8 +2942,8 @@
                                         <h3 className="text-xl font-bold text-white mb-2">Reward Choice</h3>
                                         <p className="text-slate-300 mb-6 text-sm">{choice.source} completed. Choose your recovered gear:</p>
                                         <div className="flex flex-col gap-3">
-                                            <button onClick={() => resolveChoice(() => setLegacyLocker(p => [...p, { name: 'Sunjet', type: 'special', id: generateId() }]), "Sunjet")} className="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 rounded text-white font-bold text-sm shadow">Sunjet</button>
-                                            <button onClick={() => resolveChoice(() => setLegacyLocker(p => [...p, { name: 'Power Shears', type: 'special', id: generateId() }]), "Power Shears")} className="px-4 py-2 bg-indigo-700 hover:bg-indigo-600 rounded text-white font-bold text-sm shadow">Power Shears (Large)</button>
+                                            <button onClick={() => resolveChoice(() => setCrewLocker(p => [...p, { name: 'Sunjet', type: 'special', id: generateId() }]), "Sunjet")} className="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 rounded text-white font-bold text-sm shadow">Sunjet</button>
+                                            <button onClick={() => resolveChoice(() => setCrewLocker(p => [...p, { name: 'Power Shears', type: 'special', id: generateId() }]), "Power Shears")} className="px-4 py-2 bg-indigo-700 hover:bg-indigo-600 rounded text-white font-bold text-sm shadow">Power Shears (Large)</button>
                                         </div>
                                     </div>
                                 </div>
@@ -2591,6 +2951,52 @@
                         }
 
                         return null;
+                    })()}
+
+
+                    {actionRollPrompt && (() => {
+                        const char = crew.find(c => c.id === actionRollPrompt.charId);
+                        const vital = actionRollPrompt.vital;
+
+                        // Filter actions based on the selected die
+                        const availableActions = Object.entries(ACTION_TYPES).filter(([name, data]) => {
+                            return data.type === 'Any' || data.type.toLowerCase() === vital;
+                        });
+
+                        return (
+                            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 no-print">
+                                <div className="bg-slate-800 border border-slate-600 p-6 rounded-lg shadow-xl max-w-sm w-full">
+                                    <h3 className="text-xl font-bold text-white mb-2">Select Action</h3>
+                                    <p className="text-slate-300 mb-4 text-sm">
+                                        {char.name} is spending their <span className="font-bold uppercase text-amber-500">{vital}</span> die. What action are they taking?
+                                    </p>
+
+                                    <div className="flex flex-col gap-2 max-h-[60vh] overflow-y-auto mb-4 pr-1 custom-scrollbar">
+                                        {availableActions.map(([name, data]) => {
+                                            // Check if this action triggers TDB for this character
+                                            const roleTdbText = ROLES[char.role]?.tdb || '';
+                                            const isTdb = roleTdbText.includes(name) || (name === 'Push' && roleTdbText.includes('Push'));
+
+                                            return (
+                                                <button
+                                                    key={name}
+                                                    onClick={() => confirmActionRoll(char.id, vital, name)}
+                                                    className="text-left px-4 py-3 bg-slate-900 hover:bg-slate-700 border border-slate-700 rounded transition-colors group relative"
+                                                >
+                                                    <div className="flex justify-between items-center mb-1">
+                                                        <span className="font-bold text-sm text-white">{name}</span>
+                                                        {isTdb && <span className="text-[9px] px-1.5 py-0.5 bg-amber-600 text-white rounded font-bold uppercase shadow-[0_0_8px_rgba(217,119,6,0.5)] border border-amber-400">Two Dice Bonus</span>}
+                                                    </div>
+                                                    <span className="text-[10px] text-slate-400 block leading-tight">{data.desc}</span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+
+                                    <button onClick={() => setActionRollPrompt(null)} className="w-full px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded text-white text-sm font-bold shadow">Cancel</button>
+                                </div>
+                            </div>
+                        );
                     })()}
 
                     {redlinePrompt && (() => {
@@ -2616,12 +3022,38 @@
                                             
                                             <button onClick={() => {
                                                 const sides = parseInt(char.vitals.grit.substring(1));
-                                                const roll = getRoll(redlinePrompt.manualRoll, 1, sides);
-                                                if (roll >= 4) {
-                                                    addLog(`[REDLINE] ${char.name} rolled ${redlinePrompt.manualRoll ? `[Manual: ${roll}]` : roll} on Grit. They are clinging to life!`);
+                                                const manualVal = redlinePrompt.manualRoll ? parseInt(redlinePrompt.manualRoll) : null;
+                                                let roll1 = manualVal || rollDice(1, sides);
+                                                let roll2 = null;
+                                                let isTdb = ROLES[char.role]?.tdb?.includes('Resist Stress');
+
+                                                let finalRoll = roll1;
+                                                let logText = manualVal ? `[Manual: ${roll1}]` : `Rolled ${roll1}`;
+
+                                                if (isTdb && !manualVal) {
+                                                    roll2 = rollDice(1, sides);
+                                                    finalRoll = Math.max(roll1, roll2);
+                                                    logText = `[TDB: ${roll1}, ${roll2} -> ${finalRoll}]`;
+                                                }
+
+                                                let isCritSuccess = (isTdb && roll2 !== null && roll1 === roll2 && finalRoll >= 4);
+                                                let isCritFumble = (isTdb && roll2 !== null && roll1 === roll2 && finalRoll < 4);
+
+                                                if (finalRoll >= 4) {
+                                                    let msg = `[REDLINE] ${char.name} rolled Grit (${char.vitals.grit}): ${logText} -> SUCCESS. They are clinging to life!`;
+                                                    if (isCritSuccess) msg += " CRITICAL SUCCESS!";
+                                                    addLog(msg);
                                                     setRedlinePrompt({ ...redlinePrompt, step: 'revive' });
                                                 } else {
-                                                    addLog(`[REDLINE] ${char.name} rolled ${redlinePrompt.manualRoll ? `[Manual: ${roll}]` : roll} on Grit. They did not survive.`);
+                                                    let msg = `[REDLINE] ${char.name} rolled Grit (${char.vitals.grit}): ${logText} -> FAILED. They did not survive.`;
+                                                    if (isCritFumble) {
+                                                        msg += " CRITICAL FUMBLE! -1 Aircharge.";
+                                                        setAircharge(prev => Math.max(0, prev - 1));
+                                                    } else {
+                                                        msg += " -1 Aircharge.";
+                                                        setAircharge(prev => Math.max(0, prev - 1));
+                                                    }
+                                                    addLog(msg);
                                                     updateCharacter(char.id, 'status', 'Dead');
                                                     setRedlinePrompt(null);
                                                 }
@@ -2680,7 +3112,7 @@
                                                 </button>
                                                 <button onClick={() => {
                                                     const availableScars = SCARS.filter(s => !char.scars.includes(s));
-                                                    const randomScar = availableScars.length > 0 ? availableScars[Math.floor(Math.random() * availableScars.length)] : SCARS[0];
+                                                    const randomScar = availableScars.length > 0 ? availableScars[Math.floor(getSecureRandom() * availableScars.length)] : SCARS[0];
                                                     updateCharacter(char.id, 'addScar', randomScar);
                                                     updateCharacter(char.id, 'redlineSurvivals', char.redlineSurvivals + 1);
                                                     updateCharacter(char.id, 'wounds', 3);
@@ -2789,6 +3221,87 @@
                                             else rollSalvage(false, tableRollPrompt.actorId, tableRollPrompt.manualRoll);
                                             setTableRollPrompt(null);
                                         }} className="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 rounded text-white text-sm font-bold transition-colors shadow">Roll {tableRollPrompt.type}</button>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })()}
+
+                    {choicePrompt && (() => {
+                        const { gear, charId } = choicePrompt;
+
+                        let options = [];
+                        let category = '';
+                        if (gear.name.includes('Utility') || gear.name.includes('uItem')) {
+                            options = Object.keys(U_ITEMS).filter(k => k !== 'Empty');
+                            category = 'Utility Item';
+                        } else if (gear.name.includes('EVA Mod') || gear.name.includes('evaMod')) {
+                            options = Object.keys(EVA_MODS);
+                            category = 'EVA Mod';
+                        } else if (gear.name.includes('Weapon Mod') || gear.name.includes('weaponMod')) {
+                            options = Object.keys(WEAPON_MODS).filter(k => k !== 'None');
+                            category = 'Weapon Mod';
+                        } else if (gear.name.includes('Melee')) {
+                            options = Object.keys(WEAPONS_MELEE);
+                            category = 'Melee Weapon';
+                        } else if (gear.name.includes('Ranged')) {
+                            options = Object.keys(WEAPONS_RANGED);
+                            category = 'Ranged Weapon';
+                        } else if (gear.name.includes('Weapon')) {
+                            // Handle 'Common Weapon Choice'
+                            options = [...Object.keys(WEAPONS_MELEE), ...Object.keys(WEAPONS_RANGED).filter(k => !WEAPONS_RANGED[k].ydOnly)];
+                            category = 'Weapon';
+                        } else {
+                            // Fallback, combine some common ones
+                            options = [...Object.keys(U_ITEMS).filter(k => k !== 'Empty'), ...Object.keys(EVA_MODS), ...Object.keys(WEAPON_MODS).filter(k => k !== 'None')];
+                            category = 'Item';
+                        }
+
+                        return (
+                            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 no-print">
+                                <div className="bg-slate-800 border border-slate-600 p-6 rounded-lg shadow-xl max-w-sm w-full">
+                                    <h3 className="text-xl font-bold text-white mb-4">Make a Choice</h3>
+                                    <p className="text-slate-300 text-sm mb-4">Select a specific {category} to assign instead of "{gear.name}".</p>
+
+                                    <select
+                                        id="choiceSelection"
+                                        className="w-full bg-slate-900 text-white p-2 rounded border border-slate-700 focus:outline-none focus:border-amber-500 mb-6"
+                                    >
+                                        <option value="">-- Select an Item --</option>
+                                        {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                                    </select>
+
+                                    <div className="flex justify-end gap-3 border-t border-slate-700 pt-4">
+                                        <button onClick={() => setChoicePrompt(null)} className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded text-white text-sm font-bold transition-colors">Cancel</button>
+                                        <button
+                                            onClick={() => {
+                                                const sel = document.getElementById('choiceSelection').value;
+                                                if (!sel) return;
+
+                                                // Create the specific item and attempt to assign it
+                                                const specificGear = { ...gear, name: sel, type: category.includes('Utility') ? 'uItem' : 'special' };
+
+                                                // Call assignGear, which returns true if successful, false otherwise.
+                                                // We need to modify assignGear to return success status, or we can just check if assignment
+                                                // would succeed first, or let assignGear handle modal failure and not remove the item.
+                                                // Since assignGear currently sets a modal on failure and returns undefined, we can check
+                                                // the character state after assignment to see if it changed.
+
+                                                setChoicePrompt(null);
+
+                                                // Temporarily add to locker with new ID, then trigger assign.
+                                                // Actually better: just assign it. If it fails, we shouldn't have deleted the old one.
+                                                // Wait, assignGear directly modifies state via setCrew/setCrewLocker.
+                                                // Let's just pass a callback to assignGear or check success.
+                                                const success = assignGear(specificGear, charId, true);
+                                                if (success) {
+                                                    setCrewLocker(prev => prev.filter(g => g.id !== gear.id));
+                                                }
+                                            }}
+                                            className="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 rounded text-white text-sm font-bold transition-colors shadow"
+                                        >
+                                            Confirm Assignment
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -2984,6 +3497,16 @@
                                         <label className="flex items-center gap-2 text-sm text-slate-300">
                                             <input type="checkbox" checked={combatForm.isAssisted} onChange={e => setCombatForm({...combatForm, isAssisted: e.target.checked})} className="accent-amber-500" /> Assisted (+2 Atk or TDB)
                                         </label>
+                                            {crew.find(c => c.id === combatPrompt.charId)?.rangedMod === 'Overcharge Port' && combatForm.weaponType === 'ranged' && (
+                                                <label className="flex items-center gap-2 text-xs font-bold text-red-400">
+                                                    <input type="checkbox" checked={combatForm.useOvercharge} onChange={e => setCombatForm({...combatForm, useOvercharge: e.target.checked})} disabled={!crew.find(c => c.id === combatPrompt.charId)?.uItems.some((i, idx) => i === 'Power Cell' && !crew.find(c => c.id === combatPrompt.charId)?.live.uItemUsed?.[idx])} className="accent-red-500" /> Use Overcharge (-1 Power Cell, +4 Dmg, -4 DD)
+                                                </label>
+                                            )}
+                                            {crew.find(c => c.id === combatPrompt.charId)?.rangedMod === 'Custom Foregrip' && combatForm.weaponType === 'ranged' && (
+                                                <label className="flex items-center gap-2 text-xs font-bold text-amber-400">
+                                                    <input type="checkbox" checked={combatForm.isStationary} onChange={e => setCombatForm({...combatForm, isStationary: e.target.checked})} className="accent-amber-500" /> Stationary (+1 Atk, +1 Dmg)
+                                                </label>
+                                            )}
                                     </div>
                                     <div className="flex gap-4 border-t border-slate-700 pt-4">
                                         <div className="flex-1">
@@ -3038,7 +3561,7 @@
                                     <button onClick={() => {
                                         const aliveCrew = crew.filter(c => c.status === 'Active');
                                         const targetPool = aliveCrew.length > 0 ? aliveCrew : crew;
-                                        const randomChar = targetPool[Math.floor(Math.random() * targetPool.length)];
+                                        const randomChar = targetPool[Math.floor(getSecureRandom() * targetPool.length)];
                                         applyPenaltyToChar(randomChar, pendingPenaltyPrompt, true);
                                     }} className="flex-1 px-3 py-2 bg-slate-800 border border-slate-600 hover:bg-slate-700 rounded text-slate-300 text-xs font-bold transition-colors">
                                         Select Randomly
@@ -3055,11 +3578,11 @@
                         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 no-print">
                             <div className="bg-slate-800 border border-slate-600 p-6 rounded-lg shadow-xl max-w-sm w-full">
                                 <h3 className="text-xl font-bold text-white mb-2">Acquire New Vessel</h3>
-                                <p className="text-slate-300 mb-4 text-sm">Transferring to {shipChangePrompt.newShip}. This will reset your Ship Upgrades.</p>
+                                <p className="text-slate-300 mb-4 text-sm">Transferring to {shipChangePrompt.newShip}. Your Ship Upgrades will persist.</p>
                                 {SHIPS[shipChangePrompt.newShip].crewCount < crew.length && (
                                     <p className="text-red-400 font-bold mb-4 text-sm border border-red-900/50 p-2 rounded bg-red-950/20">WARNING: This limits your crew to {SHIPS[shipChangePrompt.newShip].crewCount} and will permanently remove the last Scrapjack(s) on your roster.</p>
                                 )}
-                                <p className="text-amber-400 mb-6 text-sm font-bold border-t border-slate-700 pt-4">Would you like to roll on the Legacy Equipment table? (This replaces your current Legacy Locker).</p>
+                                <p className="text-amber-400 mb-6 text-sm font-bold border-t border-slate-700 pt-4">Would you like to roll on the Legacy Equipment table? (This replaces your current Crew Locker).</p>
                                 <div className="flex flex-col gap-2">
                                     <div className="flex gap-2">
                                         <input type="number" placeholder="1d6" value={manualRolls.legacy || ''} onChange={e => setManualRolls({...manualRolls, legacy: e.target.value})} className="w-16 bg-slate-900 border border-slate-700 rounded text-white text-center focus:outline-none focus:border-amber-500" />
@@ -3094,15 +3617,21 @@
                                 >
                                     <IconActivity /> Play Mode
                                 </button>
+
+                                <button
+                                    onClick={() => setShowHelpModal(true)}
+                                    className="px-4 py-2 rounded font-semibold flex items-center gap-1 text-slate-300 hover:text-white hover:bg-slate-800 ml-auto border-l border-slate-700 pl-4"
+                                    title="Rules Quick Reference"
+                                >
+                                    <span className="bg-slate-700 w-5 h-5 flex items-center justify-center rounded-full text-xs font-black mr-1 border border-slate-500">?</span> Help
+                                </button>
+
                                 <button 
                                     onClick={() => handlePrint('roster')} 
                                     className="px-4 py-2 rounded font-semibold flex items-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800"
                                     title="Print Crew Roster & Campaign Record"
                                 >
                                     <IconPrinter /> PDF
-                                </button>
-                                <button onClick={() => setActiveTab('changelog')} className={`px-4 py-2 rounded font-semibold flex items-center gap-2 ${activeTab === 'changelog' ? 'bg-slate-700 text-white shadow' : 'text-slate-400 hover:text-white'}`}>
-                                    <IconLog /> Version Log
                                 </button>
                                 <button onClick={exportData} className="px-4 py-2 rounded font-semibold flex items-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800 border-l border-slate-700 pl-4 ml-2">
                                     <IconSave /> Save
@@ -3290,31 +3819,40 @@
                                 </div>
                                 <div>
                                     <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Crew Actions</label>
-                                    <button 
-                                        onClick={randomizeAllNames}
-                                        className="w-full bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white text-sm font-bold p-2 rounded flex justify-center items-center gap-2 transition-colors shadow-sm"
-                                        title="Generate random names for the entire crew"
-                                    >
-                                        <IconDice /> Reroll Names
-                                    </button>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={randomizeAllNames}
+                                            className="flex-1 bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white text-sm font-bold p-2 rounded flex justify-center items-center gap-2 transition-colors shadow-sm"
+                                            title="Generate random names for the entire crew"
+                                        >
+                                            <IconDice /> Reroll Names
+                                        </button>
+                                        <button
+                                            onClick={randomizeCrew}
+                                            className="flex-1 bg-emerald-700 hover:bg-emerald-600 border border-emerald-600 text-white text-sm font-bold p-2 rounded flex justify-center items-center gap-2 transition-colors shadow-sm"
+                                            title="Generate a completely random crew (Roles, Dice, Traits, Gear)"
+                                        >
+                                            <IconDice /> Randomize Crew
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     )}
 
-                    {/* LEGACY LOCKER (GLOBAL) */}
+                    {/* CREW LOCKER (GLOBAL) */}
                     {(activeTab === 'roster' || activeTab === 'live' || activeTab === 'campaign') && (
                     <div className="bg-slate-900 border-b border-slate-700 p-4 no-print shadow-inner">
                         <div className="max-w-6xl mx-auto">
                             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex justify-between items-end">
-                                <span>Legacy Locker</span>
+                                <span>Crew Locker</span>
                                 <span className="text-[10px] font-normal italic lowercase tracking-normal">Persistent gear storage. Assigns gear directly to crew.</span>
                             </h3>
-                            {legacyLocker.length === 0 ? (
+                            {crewLocker.length === 0 ? (
                                 <div className="text-xs text-slate-500 italic bg-slate-800/50 p-2 rounded border border-slate-700">Locker is empty. Gear recovered during missions will appear here.</div>
                             ) : (
                                 <div className="flex flex-wrap gap-2">
-                                    {legacyLocker.map(gear => (
+                                    {crewLocker.map(gear => (
                                         <div key={gear.id} className="bg-slate-800 border border-slate-600 rounded px-3 py-2 flex flex-wrap items-center gap-3 shadow-md">
                                             <span className="text-sm text-amber-500 font-bold">{gear.name}</span>
                                             <div className="flex items-center gap-1">
@@ -3330,12 +3868,24 @@
                                                     <option value="">Assign to...</option>
                                                     {crew.filter(c => c.status === 'Active' && c.wounds < 4).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                                                 </select>
+                                                {(gear.type === 'uItem' || gear.type === 'evaSuit') && (
+                                                    <button
+                                                        onClick={() => {
+                                                            setSalvage(prev => prev + 4);
+                                                            setCrewLocker(prev => prev.filter(g => g.id !== gear.id));
+                                                        }}
+                                                        className="text-emerald-500 hover:text-emerald-400 font-bold px-2 py-1 bg-slate-900 rounded border border-slate-700 hover:border-emerald-900 transition-colors"
+                                                        title="Sell for 4 Salvage"
+                                                    >
+                                                        SELL (4)
+                                                    </button>
+                                                )}
                                                 <button 
-                                                    onClick={() => setLegacyLocker(prev => prev.filter(g => g.id !== gear.id))}
+                                                    onClick={() => setCrewLocker(prev => prev.filter(g => g.id !== gear.id))}
                                                     className="text-slate-500 hover:text-red-500 font-bold px-2 py-1 bg-slate-900 rounded border border-slate-700 hover:border-red-900 transition-colors"
                                                     title="Discard Item"
                                                 >
-                                                    REMOVE
+                                                    &times;
                                                 </button>
                                             </div>
                                         </div>
@@ -3424,6 +3974,7 @@
                                                                 <span>Durability: {SUITS[char.suit].dur}</span>
                                                                 <span>Move: {SUITS[char.suit].move}"</span>
                                                             </p>
+                                                            {SUITS[char.suit].special && <p className="text-[9px] text-indigo-300 mt-1 italic leading-tight">{SUITS[char.suit].special}</p>}
                                                         </div>
                                                     </div>
 
@@ -3617,6 +4168,20 @@
                                                                             >
                                                                                 {Object.keys(U_ITEMS).map(item => <option key={item} value={item}>{item}</option>)}
                                                                             </select>
+                                                                            {char.uItems[i] && char.uItems[i] !== 'Empty' && (
+                                                                                <button
+                                                                                    onClick={() => {
+                                                                                        setSalvage(prev => prev + 4);
+                                                                                        const newItems = [...char.uItems];
+                                                                                        newItems[i] = 'Empty';
+                                                                                        updateCharacter(char.id, 'uItems', newItems);
+                                                                                    }}
+                                                                                    className="text-[9px] font-bold text-emerald-500 hover:text-emerald-400 bg-slate-950 px-1.5 py-0.5 rounded border border-emerald-900/50 flex-shrink-0"
+                                                                                    title="Sell for 4 Salvage"
+                                                                                >
+                                                                                    SELL (4)
+                                                                                </button>
+                                                                            )}
                                                                         </div>
                                                                         {char.uItems[i] && char.uItems[i] !== 'Empty' && (
                                                                             <p className="text-[9px] text-slate-400 italic pl-6">{U_ITEMS[char.uItems[i]].effect}</p>
@@ -3653,6 +4218,24 @@
                                             <span className="text-xs font-normal text-slate-400">Play Mode Global Dashboard</span>
                                         </div>
                                     </h2>
+
+                                    {activeContract && (
+                                        <div className="mb-4 bg-slate-900 border border-amber-900/50 rounded p-3 flex flex-col md:flex-row md:items-center justify-between gap-2 shadow-inner">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-[10px] bg-amber-600 text-white px-2 py-1 rounded font-bold uppercase tracking-wider">Active Job</span>
+                                                <span className="text-sm text-white font-bold">{activeContract.target}</span>
+                                            </div>
+                                            <div className="flex gap-4 text-xs text-slate-400">
+                                                <span><strong className="text-slate-300">Type:</strong> {activeContract.type}</span>
+                                                <span><strong className="text-slate-300">Size:</strong> {activeContract.size}</span>
+                                            </div>
+                                            {activeContract.complications && activeContract.complications !== 'None' && (
+                                                <div className="text-xs text-amber-500 font-bold max-w-xs text-right hidden md:block italic">
+                                                    {activeContract.complications}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                     
                                     <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch">
                                         
@@ -4197,6 +4780,7 @@
                                                         <button 
                                                             disabled={isDead || isRetired}
                                                             onClick={() => {
+                                                                updateLiveState(char.id, 'usedMove', false);
                                                                 updateLiveState(char.id, 'usedLoad', false);
                                                                 updateLiveState(char.id, 'usedFocus', false);
                                                                 updateLiveState(char.id, 'usedGrit', false);
@@ -4273,7 +4857,18 @@
 
                                                     {/* Action Dice Pool */}
                                                     <div className="flex flex-col h-full">
-                                                        <label className="block text-xs font-bold text-amber-400 uppercase mb-2">Action Dice Pool</label>
+                                                        <div className="flex justify-between items-center mb-2">
+                                                            <label className="block text-xs font-bold text-amber-400 uppercase">Action Dice Pool</label>
+                                                            <label className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-400 uppercase cursor-pointer" title={`Base Move: ${SUITS[char.suit]?.move}"`}>
+                                                                <span>Free Move</span>
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={char.live.usedMove || false}
+                                                                    onChange={() => updateLiveState(char.id, 'usedMove', !char.live.usedMove)}
+                                                                    className="accent-emerald-500 w-3 h-3"
+                                                                />
+                                                            </label>
+                                                        </div>
                                                         <div className="space-y-2 mb-3">
                                                             {['load', 'focus', 'grit'].map(v => {
                                                                 const state = getDieState(char, v);
@@ -4295,7 +4890,7 @@
                                                                             </span>
                                                                         </div>
                                                                         <div className="flex gap-1 flex-shrink-0">
-                                                                            <button onClick={() => handleStandardRoll(char.id, v)} disabled={state !== 'ready'} className="bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-700 disabled:text-slate-500 text-white text-[10px] font-bold px-2 py-1 rounded shadow">Roll</button>
+                                                                            <button onClick={() => triggerActionRoll(char.id, v)} disabled={state !== 'ready'} className="bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-700 disabled:text-slate-500 text-white text-[10px] font-bold px-2 py-1 rounded shadow">Roll</button>
                                                                             <button onClick={toggleUsed} disabled={state === 'disabled'} className="bg-slate-700 hover:bg-slate-600 disabled:bg-slate-800 text-white text-[10px] font-bold px-2 py-1 rounded shadow">Toggle</button>
                                                                         </div>
                                                                     </div>
@@ -4360,10 +4955,25 @@
                                                                             }}
                                                                             className="mt-1 accent-amber-500"
                                                                         />
-                                                                        <div>
+                                                                        <div className="flex-1">
                                                                             <div className={`text-sm font-bold ${isUsed ? 'line-through text-slate-500' : 'text-slate-200'}`}>{item}</div>
                                                                             {item !== 'Empty' && <div className="text-[9px] text-slate-400 italic leading-tight mt-0.5">{U_ITEMS[item].effect}</div>}
                                                                         </div>
+                                                                        {phase === 'Call' && item !== 'Empty' && !isUsed && (
+                                                                            <button
+                                                                                onClick={(e) => {
+                                                                                    e.preventDefault();
+                                                                                    setSalvage(prev => prev + 4);
+                                                                                    const newItems = [...char.uItems];
+                                                                                    newItems[i] = 'Empty';
+                                                                                    updateCharacter(char.id, 'uItems', newItems);
+                                                                                }}
+                                                                                className="text-[9px] font-bold text-emerald-500 hover:text-emerald-400 bg-slate-950 px-1.5 py-1 rounded border border-emerald-900/50 flex-shrink-0 z-10"
+                                                                                title="Sell for 4 Salvage"
+                                                                            >
+                                                                                SELL (4)
+                                                                            </button>
+                                                                        )}
                                                                     </label>
                                                                 );
                                                             })}
@@ -4377,27 +4987,6 @@
                             </div>
                         )}
 
-                        {/* CHANGELOG TAB */}
-                        {activeTab === 'changelog' && (
-                            <div className="block no-print text-slate-300 max-w-4xl mx-auto bg-slate-800 p-8 rounded-xl shadow-lg mt-6">
-                                <h2 className="text-2xl font-bold text-white mb-6 border-b border-slate-700 pb-2">Version Log</h2>
-                                <div className="space-y-6">
-                                    {VERSION_HISTORY.map((log, idx) => (
-                                        <div key={idx} className="border-l-2 border-amber-500 pl-4">
-                                            <div className="flex items-baseline gap-3 mb-2">
-                                                <h3 className="text-lg font-bold text-amber-500">v{log.version}</h3>
-                                                <span className="text-xs text-slate-500">{log.date}</span>
-                                            </div>
-                                            <ul className="list-disc list-inside space-y-1 text-sm text-slate-400">
-                                                {log.notes.map((note, nIdx) => (
-                                                    <li key={nIdx}>{note}</li>
-                                                ))}
-                                            </ul>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
 
                         {/* PRINT ONLY SECTION - Handles both Roster and AAR Layouts */}
                         <div className="print-only print-container">
@@ -4483,6 +5072,7 @@
                                                             <div style={{marginBottom:'4px'}}><strong>TYPE:</strong> {char.suit}</div>
                                                             <div style={{marginBottom:'4px'}}><strong>MOVEMENT:</strong> {SUITS[char.suit]?.move}"</div>
                                                             <div style={{marginBottom:'4px'}}><strong>DURABILITY:</strong> {SUITS[char.suit]?.dur}</div>
+                                                            {SUITS[char.suit]?.special && <div className="rules-text"><strong>SPECIAL:</strong> {SUITS[char.suit].special}</div>}
                                                             
                                                             {char.evaMods.length > 0 && (
                                                                 <div style={{marginTop:'6px', borderTop:'1px solid #eee', paddingTop:'4px'}}>
@@ -4509,9 +5099,9 @@
                                                         <div className="print-box" style={{borderBottomWidth: '2px'}}></div>
                                                     </div>
                                                     <div className="print-section" style={{flex: 1}}>
-                                                        <div style={{fontSize:'10px', fontWeight:'bold'}}>LEGACY LOCKER</div>
+                                                        <div style={{fontSize:'10px', fontWeight:'bold'}}>CREW LOCKER</div>
                                                         <div className="print-box" style={{borderBottomWidth: '2px', padding: '2px', fontSize: '8px', whiteSpace: 'normal'}}>
-                                                            {legacyLocker.map(g => g.name).join(', ')}
+                                                            {crewLocker.map(g => g.name).join(', ')}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -4579,9 +5169,9 @@
                                                     <div className="print-row"><strong>CLEAN EXIT TARGET:</strong> {cleanExitGoal}</div>
                                                 </div>
                                                 <div className="print-section">
-                                                    <div className="print-section-title">LEGACY LOCKER ITEMS</div>
+                                                    <div className="print-section-title">CREW LOCKER ITEMS</div>
                                                     <div className="rules-text">
-                                                        {legacyLocker.length > 0 ? legacyLocker.map(g => g.name).join(', ') : 'Empty'}
+                                                        {crewLocker.length > 0 ? crewLocker.map(g => g.name).join(', ') : 'Empty'}
                                                     </div>
                                                 </div>
                                             </div>
@@ -4590,6 +5180,66 @@
                                         <div className="print-footer">
                                             PROPERTY OF VASTSTAR RECOVERY GROUP <br/>
                                             Unauthorized alteration voids contract.
+                                        </div>
+                                    </div>
+
+                                    <div className="print-card" style={{marginTop: '24px', pageBreakBefore: 'always'}}>
+                                        <div className="print-header">
+                                            <span>OPERATIONAL QUICK REFERENCE</span>
+                                            <span>FORM VRG-SJ-QR-01</span>
+                                        </div>
+
+                                        <div style={{display: 'flex', gap: '12px'}}>
+                                            <div style={{flex: 1}}>
+                                                <div className="print-section">
+                                                    <div className="print-section-title">TURN STRUCTURE</div>
+                                                    <ol style={{fontSize: '9px', paddingLeft: '12px', margin: 0}}>
+                                                        <li><strong>Breach (Start of MHU):</strong> Roll Entry Hazard. Set MHU baseline.</li>
+                                                        <li><strong>Sweep (Player Turn):</strong> Scrapjacks activate. Move + Action Dice (Load, Focus, Grit). Spend dice to succeed on 4+.</li>
+                                                        <li><strong>Hitch (Enemy/Environment):</strong> Unused Action Dice become Reserve. Roll D10 for Hitch. Enemies activate. </li>
+                                                        <li><strong>Call (Decision Phase):</strong> Choose to extract (End Job) or reset Phase to Breach next MHU.</li>
+                                                    </ol>
+                                                </div>
+                                                <div className="print-section">
+                                                    <div className="print-section-title">CRITICAL ROLLS (TDB ONLY)</div>
+                                                    <div className="rules-text">
+                                                        <strong>Crit-Success:</strong> Roll doubles (e.g. 5,5) and succeed (4+). The action succeeds and the die is NOT expended.<br/>
+                                                        <strong>Crit-Fumble:</strong> Roll doubles and fail (&lt;4). Activation ends immediately (lose remaining dice). -1 Aircharge.
+                                                    </div>
+                                                </div>
+                                                <div className="print-section">
+                                                    <div className="print-section-title">GRIT REACTIONS</div>
+                                                    <div className="rules-text">
+                                                        <strong>Resist:</strong> Reaction roll against specific hazards. Grit die is only spent on failure.<br/>
+                                                        <strong>Resist Stress:</strong> Roll vs Terror (Prime hostiles) or Redline (fatal wounds).
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div style={{flex: 1}}>
+                                                <div className="print-section">
+                                                    <div className="print-section-title">ACTIONS BY DIE TYPE (Target 4+)</div>
+                                                    <div className="rules-text" style={{display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '2px 8px'}}>
+                                                        <strong>Any Die:</strong><span>Aim (+2 Atk, -2 Enemy DD), Assist (Grants TDB or +2), Interact/Use</span>
+                                                        <strong>Load:</strong><span>Move (beyond Free Move), Melee Combat, Break/Brace</span>
+                                                        <strong>Focus:</strong><span>Ranged Combat, Repair/Heal, Scan/Hack</span>
+                                                        <strong>Grit:</strong><span>Push (Costs 1 AC regardless. On success: regain free move & full dice pool)</span>
+                                                    </div>
+                                                </div>
+                                                <div className="print-section">
+                                                    <div className="print-section-title">RESERVE DICE</div>
+                                                    <div className="rules-text">
+                                                        Unspent dice (Load, Focus, Grit) become Reserve Dice during the Hitch Phase. Can be used as Reactions (e.g. Overwatch) if the situation applies to the specific die type.
+                                                    </div>
+                                                </div>
+                                                <div className="print-section">
+                                                    <div className="print-section-title">COMBAT RESOLUTION</div>
+                                                    <div className="rules-text">
+                                                        <strong>Target Number:</strong> 4+. (Base Attack + Weapon/Mod Modifiers).<br/>
+                                                        <strong>Enemy DD (Dodge/Defend):</strong> D10. Must equal or exceed the Scrapjack's final Attack Total to block.<br/>
+                                                        <strong>Damage:</strong> Most weapons inflict 1 Wound. Some cause Suit Breaches. 4 Wounds = Redlined.
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </>
@@ -4686,6 +5336,145 @@
                                 </div>
                             )}
                         </div>
+
+                        {/* Footer Version Link */}
+                        <div className="fixed bottom-2 right-4 no-print">
+                            <button onClick={() => setShowChangelog(true)} className="text-[10px] text-slate-600 hover:text-slate-400 transition-colors">
+                                v{VERSION_HISTORY[0].version}
+                            </button>
+                        </div>
+
+                        {/* Changelog Modal */}
+                        {showChangelog && (
+                            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 no-print" onClick={() => setShowChangelog(false)}>
+                                <div className="bg-slate-800 border border-slate-600 p-6 rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] flex flex-col" onClick={e => e.stopPropagation()}>
+                                    <div className="flex justify-between items-center mb-4 border-b border-slate-700 pb-2">
+                                        <h3 className="text-xl font-bold text-white">Version Log</h3>
+                                        <button onClick={() => setShowChangelog(false)} className="text-slate-400 hover:text-white font-bold text-xl">&times;</button>
+                                    </div>
+                                    <div className="overflow-y-auto custom-scrollbar pr-2 flex-1 space-y-6">
+                                        {VERSION_HISTORY.map((log, idx) => (
+                                            <div key={idx} className="border-l-2 border-amber-500 pl-4">
+                                                <div className="flex items-baseline gap-3 mb-2">
+                                                    <h3 className="text-lg font-bold text-amber-500">v{log.version}</h3>
+                                                    <span className="text-xs text-slate-500">{log.date}</span>
+                                                </div>
+                                                <ul className="list-disc list-inside space-y-1 text-sm text-slate-400">
+                                                    {log.notes.map((note, nIdx) => (
+                                                        <li key={nIdx}>{note}</li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Help Modal */}
+                        {showHelpModal && (
+                            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 no-print" onClick={() => setShowHelpModal(false)}>
+                                <div className="bg-slate-800 border border-slate-600 p-6 rounded-lg shadow-xl max-w-4xl w-full max-h-[85vh] flex flex-col" onClick={e => e.stopPropagation()}>
+                                    <div className="flex justify-between items-center mb-4 border-b border-slate-700 pb-2">
+                                        <h3 className="text-xl font-bold text-amber-500 flex items-center gap-2">
+                                            <span className="bg-amber-600 text-white w-6 h-6 flex items-center justify-center rounded-full text-sm font-black border border-amber-500">?</span>
+                                            Quick Reference: {activeTab === 'roster' ? 'Crew Roster' : activeTab === 'campaign' ? 'Campaign & Ship' : 'Play Mode & Combat'}
+                                        </h3>
+                                        <button onClick={() => setShowHelpModal(false)} className="text-slate-400 hover:text-white font-bold text-xl">&times;</button>
+                                    </div>
+
+                                    <div className="overflow-y-auto custom-scrollbar pr-4 flex-1 text-slate-300 text-sm leading-relaxed space-y-6">
+
+                                        {activeTab === 'roster' && (
+                                            <>
+                                                <section>
+                                                    <h4 className="text-lg font-bold text-white mb-2 border-b border-slate-700 pb-1">Creating a Crew</h4>
+                                                    <ol className="list-decimal list-inside space-y-2 marker:text-amber-500">
+                                                        <li><strong>Role & Stats:</strong> Choose a Role. Assign Action Dice (d6, d8, d10) to Vitals (Load, Focus, Grit) based on Role.</li>
+                                                        <li><strong>EVA Suit:</strong> Choose a starting suit. Record Base Move (Move Phase limits), Slots, and Armor.</li>
+                                                        <li><strong>Gear Up:</strong> Select 1 Melee Weapon, 1 Ranged Weapon (Yarddogs get special options), and fill Utility slots.</li>
+                                                        <li><strong>Crew Locker:</strong> Store unused items here. The locker persists across ship changes.</li>
+                                                    </ol>
+                                                </section>
+
+                                                <section>
+                                                    <h4 className="text-lg font-bold text-white mb-2 border-b border-slate-700 pb-1">Vitals & Action Dice</h4>
+                                                    <ul className="list-disc list-inside space-y-1">
+                                                        <li><strong>Load:</strong> Physical strength, leverage, moving heavy debris, Break/Brace actions.</li>
+                                                        <li><strong>Focus:</strong> Concentration, tech manipulation, shooting accuracy, Scan/Hack actions.</li>
+                                                        <li><strong>Grit:</strong> Mental fortitude, hazard resistance, close combat, Interact/Use actions.</li>
+                                                    </ul>
+                                                </section>
+
+                                                <section>
+                                                    <h4 className="text-lg font-bold text-white mb-2 border-b border-slate-700 pb-1">Health & Stress</h4>
+                                                    <p className="mb-2">Max Wounds is 4. At 4 Wounds, a Scrapjack is REDLINED. If a redlined character takes another Wound, they are Dead. Max Stress is 4. If a stressed character takes more stress, they take 1 Wound instead.</p>
+                                                    <p>Wounds cause permanent Scars (up to 3 max). Retired characters are removed from duty but count towards your campaign score.</p>
+                                                </section>
+                                            </>
+                                        )}
+
+                                        {activeTab === 'campaign' && (
+                                            <>
+                                                <section>
+                                                    <h4 className="text-lg font-bold text-white mb-2 border-b border-slate-700 pb-1">Ship Phase (Reset)</h4>
+                                                    <ol className="list-decimal list-inside space-y-2 marker:text-amber-500">
+                                                        <li><strong>Healing:</strong> Spend Salvage to heal Wounds (4 Salvage/Wound) or clear Scars (20 Salvage). All Stress is cleared automatically.</li>
+                                                        <li><strong>Sell Gear:</strong> Sell unused Utility Items/Mods from the locker for 4 Salvage each.</li>
+                                                        <li><strong>Upgrades:</strong> Purchase Ship Upgrades or Crew Training/Knacks.</li>
+                                                        <li><strong>New Ship:</strong> When ACR Debt hits 0, you must buy out the current ship and roll for a new class. Upgrades, the Crew Locker, and existing EVA Suits persist.</li>
+                                                    </ol>
+                                                </section>
+
+                                                <section>
+                                                    <h4 className="text-lg font-bold text-white mb-2 border-b border-slate-700 pb-1">Starting a Job</h4>
+                                                    <ul className="list-disc list-inside space-y-1">
+                                                        <li>Select a contract size (determines Mission Level and objective quantity).</li>
+                                                        <li>Set Ship Aircharge to maximum.</li>
+                                                        <li>Move to Play Mode to begin the first Turn.</li>
+                                                    </ul>
+                                                </section>
+                                            </>
+                                        )}
+
+                                        {activeTab === 'live' && (
+                                            <>
+                                                <section>
+                                                    <h4 className="text-lg font-bold text-white mb-2 border-b border-slate-700 pb-1">Turn Structure</h4>
+                                                    <ol className="list-decimal list-inside space-y-2 marker:text-amber-500">
+                                                        <li><strong>Breach (Start of each MHU):</strong> Roll Entry Hazard. Establish baseline conditions for the MHU.</li>
+                                                        <li><strong>Sweep:</strong> The main action phase. Scrapjacks take turns acting. 1 Free Move + 1 Action Die per turn. Pushing: when a character has exhausted all Action Dice, they may choose to Push. Pushing costs -1 Aircharge. The player selects an Action Die and rolls: on a 4+, they regain all Action Dice and their Free Move. On a failure, the action is lost.</li>
+                                                        <li><strong>Hitch:</strong> When all Scrapjacks have acted, roll the Hitch Die (d10). Events scale from cosmetic hazards to deadly hostile spawns.</li>
+                                                        <li><strong>Call:</strong> Decide to continue to next MHU or Extract. (Only allowed if no hostiles are present).</li>
+                                                    </ol>
+                                                </section>
+
+                                                <section>
+                                                    <h4 className="text-lg font-bold text-white mb-2 border-b border-slate-700 pb-1">Combat Resolution</h4>
+                                                    <p className="mb-2"><strong>Attacker:</strong> Roll assigned Action Die (typically Load for Melee, Focus for Ranged).</p>
+                                                    <p className="mb-2"><strong>Defender (DD):</strong> Target rolls d6. Target Number is (Attacker Roll + Weapon Modifiers).</p>
+                                                    <ul className="list-disc list-inside space-y-1 ml-4 mb-2">
+                                                        <li>If DD Roll &ge; TN: Attack Misses / is Defended.</li>
+                                                        <li>If DD Roll &lt; TN: Attack Hits. Apply Wound (and potential Suit Breach/Stun).</li>
+                                                    </ul>
+                                                    <p className="italic text-xs text-amber-400">Modifiers: Cover grants +2 DD. Aiming grants +2 to Attacker Roll.</p>
+                                                </section>
+
+                                                <section>
+                                                    <h4 className="text-lg font-bold text-white mb-2 border-b border-slate-700 pb-1">Points of Interest (POI) & Objectives</h4>
+                                                    <p>POIs require specific actions to open (Break/Brace with Load, Scan/Hack with Focus, Interact/Use with Grit/Any). Roll the designated Action Die. 4+ is a success. Less than 4 is a failure (often resulting in penalties or forcing a Quiet Pull).</p>
+                                                </section>
+                                            </>
+                                        )}
+
+                                    </div>
+                                    <div className="pt-4 mt-4 border-t border-slate-700 flex justify-end">
+                                        <button onClick={() => setShowHelpModal(false)} className="px-6 py-2 bg-slate-700 hover:bg-slate-600 rounded text-white font-bold transition-colors">Close</button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                     </div>
                 </div>
             );
